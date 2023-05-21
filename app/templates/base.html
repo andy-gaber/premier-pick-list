@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{{ title }}</title>
+    </head>
+    <body>
+        <div>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('notes') }}">Notes</a>
+        </div>
+        <hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        
+        <ul>  <!-- <ul class=flashes> -->
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}
+
+        {% endblock %}
+    </body>
+</html>

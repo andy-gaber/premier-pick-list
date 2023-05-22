@@ -10,3 +10,8 @@ class NoteForm(FlaskForm):
 	
 	# edit = SubmitField('Edit')
 	# delete = SubmitField('Delete')
+
+
+class RefreshForm(FlaskForm):
+	note = TextAreaField("Add note", validators=[InputRequired()])  # DataRequired()
+	refresh = SubmitField("Refresh All Stores")

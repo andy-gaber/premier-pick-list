@@ -28,7 +28,12 @@ from config import (
 )
 
 
-auth = HTTPBasicAuth(USER, PASS)
+AUTH = HTTPBasicAuth(USER, PASS)
+AMAZON = 'Amazon'
+EBAY = 'eBay'
+PREM_SHIRTS = 'Premier Shirts'
+NSOTD = 'New Shirt of the Day'
+BUCKEROO = 'Buckeroo'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -105,36 +110,39 @@ def update():
 
 
 def _refresh_stores():
-	amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=auth)
-	amazon_can = requests.post(AMZ_CAN_REFRESH_ENDPOINT, auth=auth)
-	ebay = requests.post(EBAY_REFRESH_ENDPOINT, auth=auth)
-	prem = requests.post(PREM_SHIRTS_REFRESH_ENDPOINT, auth=auth)
-	nsotd = requests.post(NSOTD_REFRESH_ENDPOINT, auth=auth)
-	buckeroo = requests.post(BUCK_REFRESH_ENDPOINT, auth=auth)
-
 	try:
-		if (amazon_usa.json()['success'] == 'true' and
-			amazon_can.json()['success'] == 'true' and
-			ebay.json()['success'] == 'true' and
-			prem.json()['success'] == 'true' and
-			nsotd.json()['success'] == 'true' and
-			buckeroo.json()['success'] == 'true'):
-
-			time.sleep(10)  # sleep(120)
-			return True
+		amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=AUTH)
+		amazon_can = requests.post(AMZ_CAN_REFRESH_ENDPOINT, auth=AUTH)
+		ebay = requests.post(EBAY_REFRESH_ENDPOINT, auth=AUTH)
+		prem = requests.post(PREM_SHIRTS_REFRESH_ENDPOINT, auth=AUTH)
+		nsotd = requests.post(NSOTD_REFRESH_ENDPOINT, auth=AUTH)
+		buckeroo = requests.post(BUCK_REFRESH_ENDPOINT, auth=AUTH)
 	except Exception as e:
+		print(e)
 		return False
 
+	if (amazon_usa.json()['success'] == 'true' and
+		amazon_can.json()['success'] == 'true' and
+		ebay.json()['success'] == 'true' and
+		prem.json()['success'] == 'true' and
+		nsotd.json()['success'] == 'true' and
+		buckeroo.json()['success'] == 'true'):
+
+		time.sleep(10)  # sleep(120)
+		return True
+	
+	return False
+	
 
 def _get_amazon_orders():
 	# USA orders that are awaiting shipment
-	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=auth)
+	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=AUTH)
 	# USA orders that are pending fulfillment
-	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=auth)
+	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=AUTH)
 	# Canadian orders that are awaiting shipment
-	amazon_can_await_resp = requests.get(AMZ_CAN_AWAIT_ENDPOINT, auth=auth)
+	amazon_can_await_resp = requests.get(AMZ_CAN_AWAIT_ENDPOINT, auth=AUTH)
 	# Canadian orders that are pending fulfillment
-	amazon_can_pend_resp = requests.get(AMZ_CAN_PEND_ENDPOINT, auth=auth)
+	amazon_can_pend_resp = requests.get(AMZ_CAN_PEND_ENDPOINT, auth=AUTH)
 	# Lists
 	amazon_usa_await_orders = amazon_usa_await_resp.json()['orders']
 	amazon_usa_pend_orders = amazon_usa_pend_resp.json()['orders']
@@ -148,7 +156,7 @@ def _get_amazon_orders():
 
 
 def _get_ebay_orders():
-	ebay_await_resp = requests.get(EBAY_ENDPOINT, auth=auth)
+	ebay_await_resp = requests.get(EBAY_ENDPOINT, auth=AUTH)
 	# List
 	ebay_orders = ebay_await_resp.json()['orders']
 	num_orders = str(len(ebay_orders))
@@ -157,7 +165,7 @@ def _get_ebay_orders():
 
 
 def _get_prem_orders():
-	prem_shirts_await_resp = requests.get(PREM_SHIRTS_ENDPOINT, auth=auth)
+	prem_shirts_await_resp = requests.get(PREM_SHIRTS_ENDPOINT, auth=AUTH)
 	# List
 	prem_shirts_orders = prem_shirts_await_resp.json()['orders']
 	num_orders = str(len(prem_shirts_orders))
@@ -166,7 +174,7 @@ def _get_prem_orders():
 
 
 def _get_nsotd_orders():
-	nsotd_await_resp = requests.get(NSOTD_ENDPOINT, auth=auth)
+	nsotd_await_resp = requests.get(NSOTD_ENDPOINT, auth=AUTH)
 	# List
 	nsotd_orders = nsotd_await_resp.json()['orders']
 	num_orders = str(len(nsotd_orders))
@@ -175,7 +183,7 @@ def _get_nsotd_orders():
 
 
 def _get_buckeroo_orders():
-	buck_await_resp = requests.get(BUCK_ENDPOINT, auth=auth)
+	buck_await_resp = requests.get(BUCK_ENDPOINT, auth=AUTH)
 	# List
 	buck_orders = buck_await_resp.json()['orders']
 	num_orders = str(len(buck_orders))
@@ -238,3 +246,7 @@ def _parse_order_metadata(orders, is_ebay=False):
 				order_data[order_num].append(item_data)
 
 	return order_data
+
+
+def _clean_order_data():
+	pass

@@ -12,14 +12,14 @@ class Item(db.Model):
 	quantity = db.Column(db.Integer)
 
 	def __repr__(self):
-		return "<Item>\n" + \
-				"Order number:  " + self.order_num + "\n" + \
-				"Order date:    " + self.order_date + "\n" + \
-				"Store:         " + self.store + "\n" + \
-				"Customer:      " + self.customer + "\n" + \
-				"SKU:           " + self.sku + "\n" + \
-				"Description:   " + self.description + "\n" + \
-				"Quantity:      " + str(self.quantity)
+		return '<Item>\n' + \
+				'Order number:  ' + self.order_num + '\n' + \
+				'Order date:    ' + self.order_date + '\n' + \
+				'Store:         ' + self.store + '\n' + \
+				'Customer:      ' + self.customer + '\n' + \
+				'SKU:           ' + self.sku + '\n' + \
+				'Description:   ' + self.description + '\n' + \
+				'Quantity:      ' + str(self.quantity)
 		
 
 class Note(db.Model):
@@ -27,6 +27,6 @@ class Note(db.Model):
 	note = db.Column(db.String(320))
 
 	def __repr__(self):
-		return 	"<Note>\n" + \
-				"Note: " + self.note
+		return 	'<Note>\n' + \
+				'Note: ' + self.note
 

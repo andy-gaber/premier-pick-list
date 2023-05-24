@@ -5,64 +5,112 @@ from requests.auth import HTTPBasicAuth
 
 from flask import render_template, flash, redirect, url_for
 from app import app
-from app.forms import NoteForm, RefreshForm
+from app.forms import NoteForm
 
-from config import USER, PASS, store_ids
 from sku_map import MAP
+from config import (
+	USER, 
+	PASS, 
+	AMZ_USA_REFRESH_ENDPOINT,
+	AMZ_CAN_REFRESH_ENDPOINT,
+	EBAY_REFRESH_ENDPOINT,
+	PREM_SHIRTS_REFRESH_ENDPOINT,
+	NSOTD_REFRESH_ENDPOINT,
+	BUCK_REFRESH_ENDPOINT,
+	AMZ_USA_AWAIT_ENDPOINT, 
+	AMZ_USA_PEND_ENDPOINT, 
+	AMZ_CAN_AWAIT_ENDPOINT, 
+	AMZ_CAN_PEND_ENDPOINT, 
+	EBAY_ENDPOINT, 
+	PREM_SHIRTS_ENDPOINT, 
+	NSOTD_ENDPOINT, 
+	BUCK_ENDPOINT
+)
 
 
 auth = HTTPBasicAuth(USER, PASS)
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route('/', methods=['GET', 'POST'])
 def home():
 	header = {'name':'premier'} 
-	return render_template("home.html", title="Premier App", header=header)
+	return render_template('home.html', title='Premier App', header=header)
 
 
-@app.route("/notes", methods=["GET", "POST"])
+@app.route('/notes', methods=['GET', 'POST'])
 def notes():
 	form = NoteForm()
 	if form.validate_on_submit():
 		flash(f'Form submitted: {form.note.data}')
-		return redirect(url_for("notes"))
-	return render_template("notes.html", title="Notes", form=form)
+		return redirect(url_for('notes'))
+	return render_template('notes.html', title='Notes', form=form)
 
 
-@app.route("/refresh")
-def refresh():
-	if _refresh_all():
-		print("* Refreshing...")
-		flash("Refresh success")
+@app.route('/update')
+def update():
+	if _refresh_stores():
+		flash('All Stores Updated!')
 
+		# amazon
 		usa_await, usa_pend, can_await, can_pend = _get_amazon_orders()
-
 		usa_await_order_data = _parse_order_metadata(usa_await)
 		usa_pend_order_data = _parse_order_metadata(usa_pend)
 		can_await_order_data = _parse_order_metadata(can_await)
 		can_pend_order_data = _parse_order_metadata(can_pend)
-
 		for k,v in usa_await_order_data.items():
 			print(k)
 			print(v)
+			print('-'*80)
 
-		return redirect(url_for("home"))
-	flash(f"[Error] store refresh")
-	return redirect(url_for("home"))
+		# ebay
+		ebay_orders = _get_ebay_orders()
+		ebay_order_data = _parse_order_metadata(ebay_orders, is_ebay=True)
+		for k,v in ebay_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
+
+		# premier shirtrs
+		prem_orders = _get_prem_orders()
+		prem_order_data = _parse_order_metadata(prem_orders)
+		for k,v in prem_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
+
+		# new shirt of the day
+		nsotd_orders = _get_nsotd_orders()
+		nsotd_order_data = _parse_order_metadata(nsotd_orders)
+		for k,v in nsotd_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
+
+		# buckeroo
+		buck_orders = _get_buckeroo_orders()
+		buck_order_data = _parse_order_metadata(buck_orders)
+		for k,v in buck_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
+
+		return redirect(url_for('home'))
+	flash(f'[Error] store refresh')
+	return redirect(url_for('home'))
 
 
-# @app.route("/all_orders")
+# @app.route('/all_orders')
 # def all_orders():
 #     pass
 
 
-def _refresh_all():
-	amazon_usa = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["amazon_usa"]}', auth=auth)
-	amazon_can = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["amazon_can"]}', auth=auth)
-	ebay = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["ebay"]}', auth=auth)
-	prem = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["prem"]}', auth=auth)
-	nsotd = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["nsotd"]}', auth=auth)
-	buckeroo = requests.post(f'https://ssapi.shipstation.com/stores/refreshstore?storeId={store_ids["buckeroo"]}', auth=auth)
+def _refresh_stores():
+	amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=auth)
+	amazon_can = requests.post(AMZ_CAN_REFRESH_ENDPOINT, auth=auth)
+	ebay = requests.post(EBAY_REFRESH_ENDPOINT, auth=auth)
+	prem = requests.post(PREM_SHIRTS_REFRESH_ENDPOINT, auth=auth)
+	nsotd = requests.post(NSOTD_REFRESH_ENDPOINT, auth=auth)
+	buckeroo = requests.post(BUCK_REFRESH_ENDPOINT, auth=auth)
 
 	try:
 		if (amazon_usa.json()['success'] == 'true' and
@@ -80,40 +128,59 @@ def _refresh_all():
 
 def _get_amazon_orders():
 	# USA orders that are awaiting shipment
-	amazon_usa_await_resp = requests.get(f'https://ssapi.shipstation.com/orders?orderStatus=awaiting_shipment&storeId={store_ids["amazon_usa"]}&sortBy=OrderDate&sortDir=DESC&pageSize=500', auth=auth)
-	
+	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=auth)
 	# USA orders that are pending fulfillment
-	amazon_usa_pend_resp = requests.get(f'https://ssapi.shipstation.com/orders?orderStatus=pending_fulfillment&storeId={store_ids["amazon_usa"]}&sortBy=OrderDate&sortDir=DESC&pageSize=500', auth=auth)
-	
+	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=auth)
 	# Canadian orders that are awaiting shipment
-	amazon_can_await_resp = requests.get(f'https://ssapi.shipstation.com/orders?orderStatus=awaiting_shipment&storeId={store_ids["amazon_can"]}&sortBy=OrderDate&sortDir=DESC&pageSize=500', auth=auth)
-	
+	amazon_can_await_resp = requests.get(AMZ_CAN_AWAIT_ENDPOINT, auth=auth)
 	# Canadian orders that are pending fulfillment
-	amazon_can_pend_resp = requests.get(f'https://ssapi.shipstation.com/orders?orderStatus=pending_fulfillment&storeId={store_ids["amazon_can"]}&sortBy=OrderDate&sortDir=DESC&pageSize=500', auth=auth)
-
+	amazon_can_pend_resp = requests.get(AMZ_CAN_PEND_ENDPOINT, auth=auth)
 	# Lists
-	amazon_usa_await = amazon_usa_await_resp.json()['orders']
-	amazon_usa_pend = amazon_usa_pend_resp.json()['orders']
-	amazon_can_await = amazon_can_await_resp.json()['orders']
-	amazon_can_pend = amazon_can_pend_resp.json()['orders']
+	amazon_usa_await_orders = amazon_usa_await_resp.json()['orders']
+	amazon_usa_pend_orders = amazon_usa_pend_resp.json()['orders']
+	amazon_can_await_orders = amazon_can_await_resp.json()['orders']
+	amazon_can_pend_orders = amazon_can_pend_resp.json()['orders']
 
-	num_orders = str(len(amazon_usa_await) + len(amazon_usa_pend) + len(amazon_can_await) + len(amazon_can_pend))
-	print("| Amazon: " + num_orders + " |")
+	num_orders = str(len(amazon_usa_await_orders) + len(amazon_usa_pend_orders) + len(amazon_can_await_orders) + len(amazon_can_pend_orders))
+	print('\n-> Amazon: ' + num_orders + ' Orders\n')
 
-	return (amazon_usa_await, amazon_usa_pend, amazon_can_await, amazon_can_pend)
+	return (amazon_usa_await_orders, amazon_usa_pend_orders, amazon_can_await_orders, amazon_can_pend_orders)
 
 
 def _get_ebay_orders():
-	pass
+	ebay_await_resp = requests.get(EBAY_ENDPOINT, auth=auth)
+	# List
+	ebay_orders = ebay_await_resp.json()['orders']
+	num_orders = str(len(ebay_orders))
+	print('\n-> eBay: ' + num_orders + ' Orders\n')
+	return ebay_orders
+
 
 def _get_prem_orders():
-	pass
+	prem_shirts_await_resp = requests.get(PREM_SHIRTS_ENDPOINT, auth=auth)
+	# List
+	prem_shirts_orders = prem_shirts_await_resp.json()['orders']
+	num_orders = str(len(prem_shirts_orders))
+	print('\n-> Premier Shirts: ' + num_orders + ' Orders\n')
+	return prem_shirts_orders
+
 
 def _get_nsotd_orders():
-	pass
+	nsotd_await_resp = requests.get(NSOTD_ENDPOINT, auth=auth)
+	# List
+	nsotd_orders = nsotd_await_resp.json()['orders']
+	num_orders = str(len(nsotd_orders))
+	print('\n-> New Shirt of the Day: ' + num_orders + ' Orders\n')
+	return nsotd_orders
+
 
 def _get_buckeroo_orders():
-	pass
+	buck_await_resp = requests.get(BUCK_ENDPOINT, auth=auth)
+	# List
+	buck_orders = buck_await_resp.json()['orders']
+	num_orders = str(len(buck_orders))
+	print('\n-> Buckeroo: ' + num_orders + ' Orders\n')
+	return buck_orders
 
 
 # eBay's order number mapped to 'orderKey', all other order numbers mapped to 'orderNumber'
@@ -151,13 +218,13 @@ def _parse_order_metadata(orders, is_ebay=False):
 			# Clean the SKU
 			#  
 			# No SKU (NoneType)
-			if sku is None: sku = name
+			if sku is None: sku = description
 			# No SKU (empty string)
-			elif sku == '': sku = name
+			elif sku == '': sku = description
 			# Revised SKU
 			elif sku in MAP: sku = MAP[sku]
 			# Randomly generated SKU
-			elif sku[:3] == 'wi_': sku = name
+			elif sku[:3] == 'wi_': sku = description
 			# Obsolete SKU
 			elif sku[-3:] == '-SL': sku = sku[:-3]
 			elif sku[-4:] == '-SLL': sku = sku[:-4]

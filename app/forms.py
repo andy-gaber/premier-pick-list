@@ -5,13 +5,13 @@ from wtforms.validators import ValidationError, DataRequired, InputRequired
 
 # Notes
 class NoteForm(FlaskForm):
-    note = TextAreaField("Add note", validators=[InputRequired()])  # DataRequired()
-    save = SubmitField("Save")
+    note = TextAreaField('Add note', validators=[InputRequired()])  # DataRequired()
+    save = SubmitField('Save')
 	
 	# edit = SubmitField('Edit')
 	# delete = SubmitField('Delete')
 
 
-class RefreshForm(FlaskForm):
-	note = TextAreaField("Add note", validators=[InputRequired()])  # DataRequired()
-	refresh = SubmitField("Refresh All Stores")
+# class RefreshForm(FlaskForm):
+# 	note = TextAreaField('Add note', validators=[InputRequired()])  # DataRequired()
+# 	refresh = SubmitField('Refresh All Stores')

@@ -6,6 +6,7 @@ from requests.auth import HTTPBasicAuth
 from flask import render_template, flash, redirect, url_for
 from app import app
 from app.forms import NoteForm
+from app.models import Item, Note
 
 from app.logic import (
 	_refresh_stores, 
@@ -99,8 +100,20 @@ def update():
 
 
 #
-# order by date descending
+# order by SKU
 #
-# @app.route('/all_orders')
-# def all_orders():
-#     pass
+@app.route('/all-items')
+def all_items():
+	items = Item.query.order_by(Item.sku).all()
+	return render_template('all-items.html', items=items)
+
+
+@app.route('/amazon')
+def amazon():
+	
+	amazon_items = Item.query.filter_by(store=AMAZON).order_by(Item.order_datetime.desc()).all()
+
+
+
+
+	return render_template('all-items.html', items=amazon_items)

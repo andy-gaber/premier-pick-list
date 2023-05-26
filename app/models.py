@@ -14,7 +14,7 @@ class Item(db.Model):
 	order_datetime = db.Column(db.String(64), index=True)
 	customer = db.Column(db.String(128))
 	sku = db.Column(db.String(128))
-	description = db.Column(db.String(128))
+	#description = db.Column(db.String(128))
 	#quantity = db.Column(db.Integer)
 
 	# def __repr__(self):

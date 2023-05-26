@@ -53,7 +53,7 @@ def _refresh_stores():
 
 		create_tables()
 
-		time.sleep(10)  # sleep(120)
+		time.sleep(5)  # sleep(120)
 		return True
 	
 	return False
@@ -128,16 +128,20 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 		customer = order['billTo']['name']
 
-		# remove milliseconds then split date and time
-		# date, _time = order['orderDate'].split('.')[0].split('T')  # YYYY-MM-DD, hh:mm:ss
-		# year, month, day = date.split('-')                         # YYYY, MM, DD
-		# hour, minute, seconds = _time.split(':')                   # hh, mm, ss
-		# order_datetime = f'{month}/{day}/{year} {hour}:{minute}:{seconds}'
-
 		# example orderDate: 2023-05-25T14:50:07.0000000
 		# remove milliseconds, split date and time, join into single string
-		order_datetime = ' '.join(order['orderDate'].split('.')[0].split('T'))      # YYYY-MM-DD hh:mm:ss
-		
+		date, _time = order['orderDate'].split('.')[0].split('T')  			 # YYYY-MM-DD, hh:mm:ss
+		year, month, day = date.split('-')                         			 # YYYY, MM, DD
+		hour, minute, _ = _time.split(':')                   				 # hh, mm, ss
+		order_datetime = datetime.datetime(
+			year=int(year),
+			month=int(month),
+			day=int(day),
+			hour=int(hour),
+			minute=int(minute)
+		)
+		# ex: "Jan 31 2022, 11:59PM"
+		str_datetime = order_datetime.strftime('%b %d %Y, %I:%M%p')		
 
 		# A list of dictionaries with item information.
 		items_list = order['items']
@@ -170,19 +174,14 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 				itm = Item(
 					store=store, 
 					order_num=order_num, 
-					order_datetime=order_datetime, 
+					order_datetime=str_datetime, 
 					customer=customer, 
 					sku=sku, 
-					description=description, 
-					#quantity=quantity
 				)
-
 				db.session.add(itm)
 				db.session.commit()
 
-			
-
-			item_data = (order_datetime, store, customer, sku, description, quantity)
+			item_data = (str_datetime, store, customer, sku, description, quantity)
 			if order_num not in order_data:
 				order_data[order_num] = [item_data]
 			else:

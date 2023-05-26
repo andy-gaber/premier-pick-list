@@ -98,6 +98,9 @@ def update():
 	return redirect(url_for('home'))
 
 
+#
+# order by date descending
+#
 # @app.route('/all_orders')
 # def all_orders():
 #     pass

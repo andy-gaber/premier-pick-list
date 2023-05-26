@@ -4,7 +4,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from app import db
-from app.models import Item, Note
+from app.models import Item, Note, create_tables
 
 from app.sku_map import MAP
 from app.secrets import (
@@ -30,6 +30,8 @@ from app.secrets import (
 AUTH = HTTPBasicAuth(USER, PASS)
 
 
+# get up to date order data from all stoers
+# remove stale order data from db
 def _refresh_stores():
 	try:
 		amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=AUTH)
@@ -48,6 +50,8 @@ def _refresh_stores():
 		prem.json()['success'] == 'true' and
 		nsotd.json()['success'] == 'true' and
 		buckeroo.json()['success'] == 'true'):
+
+		create_tables()
 
 		time.sleep(10)  # sleep(120)
 		return True
@@ -124,17 +128,16 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 		customer = order['billTo']['name']
 
-		# strip milliseconds then split date and time
-		date, _time = order['orderDate'].split('.')[0].split('T')  # YYYY-MM-DD, hh:mm:ss
-		year, month, day = date.split('-')                         # YYYY, MM, DD
-		hour, minute, _ = _time.split(':')                         # hh, mm, ss
-		order_datetime = datetime.datetime(
-			year=int(year),
-			month=int(month),
-			day=int(day),
-			hour=int(hour),
-			minute=int(minute)
-		)
+		# remove milliseconds then split date and time
+		# date, _time = order['orderDate'].split('.')[0].split('T')  # YYYY-MM-DD, hh:mm:ss
+		# year, month, day = date.split('-')                         # YYYY, MM, DD
+		# hour, minute, seconds = _time.split(':')                   # hh, mm, ss
+		# order_datetime = f'{month}/{day}/{year} {hour}:{minute}:{seconds}'
+
+		# example orderDate: 2023-05-25T14:50:07.0000000
+		# remove milliseconds, split date and time, join into single string
+		order_datetime = ' '.join(order['orderDate'].split('.')[0].split('T'))      # YYYY-MM-DD hh:mm:ss
+		
 
 		# A list of dictionaries with item information.
 		items_list = order['items']
@@ -160,23 +163,21 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 			elif sku[-2:] == '-D': 
 				sku = sku[:-2]
 
-
-			# CLEAN SKU
 			sku = _clean_sku(sku)
 
 			# insert each item into db
 			for _ in range(quantity):
-				item = Item(
+				itm = Item(
 					store=store, 
 					order_num=order_num, 
 					order_datetime=order_datetime, 
 					customer=customer, 
 					sku=sku, 
 					description=description, 
-					quantity=quantity
+					#quantity=quantity
 				)
 
-				db.session.add(item)
+				db.session.add(itm)
 				db.session.commit()
 
 			

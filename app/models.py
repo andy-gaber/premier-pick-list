@@ -5,7 +5,7 @@ class Item(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	store = db.Column(db.String(64), index=True)
 	order_num = db.Column(db.String(64))
-	order_date = db.Column(db.String(64))
+	order_datetime = db.Column(db.String(64))
 	customer = db.Column(db.String(128))
 	sku = db.Column(db.String(128))
 	description = db.Column(db.String(128))

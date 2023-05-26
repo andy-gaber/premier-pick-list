@@ -10,8 +10,9 @@ app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy()
 db.init_app(app)
 
-def create_tables():
-	with app.app_context():
-		db.create_all()
+# create db tables
+with app.app_context():
+	db.drop_all()
+	db.create_all()
 
 from app import routes, models

@@ -280,5 +280,5 @@ def _clean_sku(sku):
 	if size == 'XXL':
 		size = '2XL'
 
-	cleaned_sku = brand_and_style + '-' + size
-	return cleaned_sku
+	# cleaned_sku = brand_and_style + '-' + size
+	return brand_and_style + '-' + size

@@ -2,19 +2,19 @@ import sqlite3
 from app import app, db, SQLITE_DATABASE_URI
 
 
-def connect_db():
+def _connect_db():
 	# creates db file if doesn't exist
 	conn = sqlite3.connect(SQLITE_DATABASE_URI)
 	return conn
 
 
-def close_db(conn):
+def _close_db(conn):
 	conn.close()
 
 
 def create_tables():
 
-	conn = connect_db()
+	conn = _connect_db()
 
 	cur = conn.cursor()
 	cur.execute("DROP TABLE IF EXISTS Item")
@@ -43,7 +43,7 @@ def create_tables():
 	cur.execute(store_idx)
 	cur.execute(dt_idx)
 
-	close_db(conn)
+	_close_db(conn)
 
 
 # def create_tables():

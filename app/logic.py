@@ -3,8 +3,11 @@ import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
-from app import db
-from app.models import Item, Note, create_tables
+#from app import db
+#from app.models import Item, Note, create_tables
+from app import SQLITE_DATABASE_URI
+from app.models import create_tables, _connect_db, _close_db
+
 
 from app.sku_map import MAP
 from app.secrets import (
@@ -140,8 +143,9 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 			hour=int(hour),
 			minute=int(minute)
 		)
-		# ex: "Jan 31 2022, 11:59PM"
-		str_datetime = order_datetime.strftime('%b %d %Y, %I:%M%p')		
+
+		# ex: "01-23-2022 11:59 PM"
+		str_datetime = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
 
 		# A list of dictionaries with item information.
 		items_list = order['items']
@@ -169,18 +173,36 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 			sku = _clean_sku(sku)
 
-			# insert each item into db
-			for _ in range(quantity):
-				itm = Item(
-					store=store, 
-					order_num=order_num, 
-					order_datetime=str_datetime, 
-					customer=customer, 
-					sku=sku, 
-				)
-				db.session.add(itm)
-				db.session.commit()
+			# # insert each item into db
+			# for _ in range(quantity):
+			# 	itm = Item(
+			# 		store=store, 
+			# 		order_num=order_num, 
+			# 		order_datetime=str_datetime, 
+			# 		customer=customer, 
+			# 		sku=sku, 
+			# 	)
+			# 	db.session.add(itm)
+			# 	db.session.commit()
 
+			conn = _connect_db()
+			cur = conn.cursor()
+
+			# insert item into db, if item quantity is greater than 1 insert it 
+			# that number of times -- items will be grouped in route functions
+			for _ in range(quantity):
+				insert = """
+					INSERT INTO Item (store, order_num, order_datetime, customer, sku)
+					VALUES (?, ?, ?, ?, ?);
+				"""
+				data = (store, order_num, str_datetime, customer, sku)
+				cur.execute(insert, data)
+
+			conn.commit()
+			_close_db(conn)
+
+			### FOR DEBUGGING
+			###
 			item_data = (str_datetime, store, customer, sku, description, quantity)
 			if order_num not in order_data:
 				order_data[order_num] = [item_data]

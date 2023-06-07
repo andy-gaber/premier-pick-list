@@ -6,7 +6,9 @@ from requests.auth import HTTPBasicAuth
 from flask import render_template, flash, redirect, url_for, current_app
 from app import app
 from app.forms import NoteForm
-from app.models import Item, Note
+#from app.models import Item, Note
+from app.models import connect_db, close_db
+
 
 from app.logic import (
 	_refresh_stores, 
@@ -20,11 +22,11 @@ from app.logic import (
 )
 
 
-AMAZON = 'Amazon'
-EBAY = 'eBay'
-PREM_SHIRTS = 'Premier Shirts'
-NSOTD = 'New Shirt of the Day'
-BUCKEROO = 'Buckeroo'
+# AMAZON = 'Amazon'
+# EBAY = 'eBay'
+# PREM_SHIRTS = 'Premier Shirts'
+# NSOTD = 'New Shirt of the Day'
+# BUCKEROO = 'Buckeroo'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -54,9 +56,9 @@ def update():
 	if _refresh_stores():
 		flash('All Stores Updated!')
 
-		# set date and time when all stores were last updated, ex: "Jan 31 2022, 11:59PM"
+		# set date and time when all stores were last updated, ex: "Jan 31 2022 11:59 PM"
 		with app.app_context():
-			current_app.last_update = datetime.datetime.now().strftime('%b %d %Y, %I:%M%p')
+			current_app.last_update = datetime.datetime.now().strftime('%b %d %Y %I:%M %p')
 
 		# amazon
 		usa_await, usa_pend, can_await, can_pend = _get_amazon_orders()
@@ -112,35 +114,96 @@ def update():
 #
 @app.route('/all-items')
 def all_items():
-	items = Item.query.order_by(Item.sku).all()
+	#items = Item.query.order_by(Item.sku).all()
+
+	conn = _connect_db()
+	cur = conn.cursor()
+	items = cur.execute("SELECT * FROM Item ORDER BY sku").fetchall()
+	_close_db(conn)
+
 	return render_template('all-items.html', items=items)
 
 
 @app.route('/amazon')
 def amazon():
-	amazon_items = Item.query.filter_by(store=AMAZON).order_by(Item.order_datetime.desc()).all()
+	#amazon_items = Item.query.filter_by(store=AMAZON).order_by(Item.order_datetime.desc()).all()
+	
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		SELECT * FROM Item
+		WHERE store='Amazon'
+		ORDER BY order_datetime DESC
+	"""
+	amazon_items = cur.execute(query).fetchall()
+	_close_db(conn)
+
 	return render_template('amazon.html', items=amazon_items)
 
 
 @app.route('/ebay')
 def ebay():
-	ebay_items = Item.query.filter_by(store=EBAY).order_by(Item.order_datetime.desc()).all()
+	#ebay_items = Item.query.filter_by(store=EBAY).order_by(Item.order_datetime.desc()).all()
+	
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		SELECT * FROM Item
+		WHERE store='eBay'
+		ORDER BY order_datetime DESC
+	"""
+	ebay_items = cur.execute(query).fetchall()
+	_close_db(conn)
+
 	return render_template('ebay.html', items=ebay_items)
 
 
 @app.route('/premier-shirts')
 def prem_shirts():
-	prem_items = Item.query.filter_by(store=PREM_SHIRTS).order_by(Item.order_datetime.desc()).all()
+	#prem_items = Item.query.filter_by(store=PREM_SHIRTS).order_by(Item.order_datetime.desc()).all()
+	
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		SELECT * FROM Item
+		WHERE store='Premier Shirts'
+		ORDER BY order_datetime DESC
+	"""
+	prem_items = cur.execute(query).fetchall()
+	_close_db(conn)
+
 	return render_template('premier-shirts.html', items=prem_items)
 
 
 @app.route('/new-shirt-of-the-day')
 def nsotd():
-	nsotd_items = Item.query.filter_by(store=NSOTD).order_by(Item.order_datetime.desc()).all()
+	#nsotd_items = Item.query.filter_by(store=NSOTD).order_by(Item.order_datetime.desc()).all()
+	
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		SELECT * FROM Item
+		WHERE store='New Shirt of the Day'
+		ORDER BY order_datetime DESC
+	"""
+	nsotd_items = cur.execute(query).fetchall()
+	_close_db(conn)
+
 	return render_template('new-shirt-of-the-day.html', items=nsotd_items)
 
 
 @app.route('/buckeroo')
 def buckeroo():
-	buck_items = Item.query.filter_by(store=BUCKEROO).order_by(Item.order_datetime.desc()).all()
+	#buck_items = Item.query.filter_by(store=BUCKEROO).order_by(Item.order_datetime.desc()).all()
+	
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		SELECT * FROM Item
+		WHERE store='Buckeroo'
+		ORDER BY order_datetime DESC
+	"""
+	buck_items = cur.execute(query).fetchall()
+	_close_db(conn)
+
 	return render_template('buckeroo.html', items=buck_items)

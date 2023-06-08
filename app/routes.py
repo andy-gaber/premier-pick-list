@@ -7,7 +7,7 @@ from flask import render_template, flash, redirect, url_for, current_app
 from app import app
 from app.forms import NoteForm
 #from app.models import Item, Note
-from app.models import _connect_db, _close_db
+from app.db import _connect_db, _close_db
 
 
 from app.logic import (

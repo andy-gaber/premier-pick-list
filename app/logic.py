@@ -6,7 +6,7 @@ from requests.auth import HTTPBasicAuth
 #from app import db
 #from app.models import Item, Note, create_tables
 from app import SQLITE_DATABASE_URI
-from app.models import create_tables, _connect_db, _close_db
+from app.db import create_tables, _connect_db, _close_db
 
 
 from app.sku_map import MAP

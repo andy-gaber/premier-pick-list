@@ -131,11 +131,13 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 		customer = order['billTo']['name']
 
-		# example orderDate: 2023-05-25T14:50:07.0000000
-		# remove milliseconds, split date and time, join into single string
-		date, _time = order['orderDate'].split('.')[0].split('T')  			 # YYYY-MM-DD, hh:mm:ss
-		year, month, day = date.split('-')                         			 # YYYY, MM, DD
-		hour, minute, _ = _time.split(':')                   				 # hh, mm, ss
+		# ISO datetime, ex: 2023-05-25T14:50:07.0000000
+		iso_dt = order['orderDate']
+
+		# remove milliseconds, split date and time
+		date, _time = iso_dt.split('.')[0].split('T')  # YYYY-MM-DD, hh:mm:ss
+		year, month, day = date.split('-')             # YYYY, MM, DD
+		hour, minute, _ = _time.split(':')             # hh, mm, ss
 		order_datetime = datetime.datetime(
 			year=int(year),
 			month=int(month),
@@ -144,7 +146,7 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 			minute=int(minute)
 		)
 
-		# ex: "01-23-2022 11:59 PM"
+		# string formatted datetime, ex: "01-23-2022 11:59 PM"
 		str_datetime = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
 
 		# A list of dictionaries with item information.
@@ -192,10 +194,10 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 			# that number of times -- items will be grouped in route functions
 			for _ in range(quantity):
 				insert = """
-					INSERT INTO Item (store, order_num, order_datetime, customer, sku)
-					VALUES (?, ?, ?, ?, ?);
+					INSERT INTO Item (store, order_num, iso_datetime, order_datetime, customer, sku)
+					VALUES (?, ?, ?, ?, ?, ?);
 				"""
-				data = (store, order_num, str_datetime, customer, sku)
+				data = (store, order_num, iso_dt, str_datetime, customer, sku)
 				cur.execute(insert, data)
 
 			conn.commit()

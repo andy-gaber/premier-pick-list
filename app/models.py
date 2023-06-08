@@ -1,5 +1,5 @@
 import sqlite3
-from app import app, db, SQLITE_DATABASE_URI
+from app import app, SQLITE_DATABASE_URI
 
 
 def _connect_db():
@@ -24,6 +24,7 @@ def create_tables():
 			id INTEGER PRIMARY KEY,
 			store TEXT,
 			order_num TEXT,
+			iso_datetime TEXT,
 			order_datetime TEXT,
 			customer TEXT,
 			sku TEXT
@@ -36,12 +37,12 @@ def create_tables():
 		ON Item (store);
 	"""
 
-	dt_idx = """
-		CREATE INDEX dt_idx
-		ON Item (order_datetime);
+	iso_idx = """
+		CREATE INDEX iso_idx
+		ON Item (iso_datetime);
 	"""
 	cur.execute(store_idx)
-	cur.execute(dt_idx)
+	cur.execute(iso_idx)
 
 	_close_db(conn)
 

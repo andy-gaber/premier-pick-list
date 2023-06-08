@@ -7,7 +7,7 @@ from flask import render_template, flash, redirect, url_for, current_app
 from app import app
 from app.forms import NoteForm
 #from app.models import Item, Note
-from app.models import connect_db, close_db
+from app.models import _connect_db, _close_db
 
 
 from app.logic import (
@@ -22,11 +22,11 @@ from app.logic import (
 )
 
 
-# AMAZON = 'Amazon'
-# EBAY = 'eBay'
-# PREM_SHIRTS = 'Premier Shirts'
-# NSOTD = 'New Shirt of the Day'
-# BUCKEROO = 'Buckeroo'
+AMAZON = 'Amazon'
+EBAY = 'eBay'
+PREM_SHIRTS = 'Premier Shirts'
+NSOTD = 'New Shirt of the Day'
+BUCKEROO = 'Buckeroo'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -133,7 +133,7 @@ def amazon():
 	query = """
 		SELECT * FROM Item
 		WHERE store='Amazon'
-		ORDER BY order_datetime DESC
+		ORDER BY iso_datetime DESC
 	"""
 	amazon_items = cur.execute(query).fetchall()
 	_close_db(conn)
@@ -150,7 +150,7 @@ def ebay():
 	query = """
 		SELECT * FROM Item
 		WHERE store='eBay'
-		ORDER BY order_datetime DESC
+		ORDER BY iso_datetime DESC
 	"""
 	ebay_items = cur.execute(query).fetchall()
 	_close_db(conn)
@@ -167,7 +167,7 @@ def prem_shirts():
 	query = """
 		SELECT * FROM Item
 		WHERE store='Premier Shirts'
-		ORDER BY order_datetime DESC
+		ORDER BY iso_datetime DESC
 	"""
 	prem_items = cur.execute(query).fetchall()
 	_close_db(conn)
@@ -184,7 +184,7 @@ def nsotd():
 	query = """
 		SELECT * FROM Item
 		WHERE store='New Shirt of the Day'
-		ORDER BY order_datetime DESC
+		ORDER BY iso_datetime DESC
 	"""
 	nsotd_items = cur.execute(query).fetchall()
 	_close_db(conn)
@@ -201,7 +201,7 @@ def buckeroo():
 	query = """
 		SELECT * FROM Item
 		WHERE store='Buckeroo'
-		ORDER BY order_datetime DESC
+		ORDER BY iso_datetime DESC
 	"""
 	buck_items = cur.execute(query).fetchall()
 	_close_db(conn)

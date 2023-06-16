@@ -3,7 +3,7 @@ import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
-from flask import render_template, flash, redirect, url_for, current_app
+from flask import render_template, flash, redirect, url_for, current_app, request
 from app import app
 from app.forms import NoteForm
 #from app.models import Item, Note
@@ -66,42 +66,42 @@ def update():
 		usa_pend_order_data = _parse_order_metadata(usa_pend, AMAZON)
 		can_await_order_data = _parse_order_metadata(can_await, AMAZON)
 		can_pend_order_data = _parse_order_metadata(can_pend, AMAZON)
-		for k,v in usa_await_order_data.items():
-			print(k)
-			print(v)
-			print('-'*80)
+		# for k,v in usa_await_order_data.items():
+		# 	print(k)
+		# 	print(v)
+		# 	print('-'*80)
 
 		# ebay
 		ebay_orders = _get_ebay_orders()
 		ebay_order_data = _parse_order_metadata(ebay_orders, EBAY, is_ebay=True)
-		for k,v in ebay_order_data.items():
-			print(k)
-			print(v)
-			print('-'*80)
+		# for k,v in ebay_order_data.items():
+		# 	print(k)
+		# 	print(v)
+		# 	print('-'*80)
 
 		# premier shirtrs
 		prem_orders = _get_prem_orders()
 		prem_order_data = _parse_order_metadata(prem_orders, PREM_SHIRTS)
-		for k,v in prem_order_data.items():
-			print(k)
-			print(v)
-			print('-'*80)
+		# for k,v in prem_order_data.items():
+		# 	print(k)
+		# 	print(v)
+		# 	print('-'*80)
 
 		# new shirt of the day
 		nsotd_orders = _get_nsotd_orders()
 		nsotd_order_data = _parse_order_metadata(nsotd_orders, NSOTD)
-		for k,v in nsotd_order_data.items():
-			print(k)
-			print(v)
-			print('-'*80)
+		# for k,v in nsotd_order_data.items():
+		# 	print(k)
+		# 	print(v)
+		# 	print('-'*80)
 
 		# buckeroo
 		buck_orders = _get_buckeroo_orders()
 		buck_order_data = _parse_order_metadata(buck_orders, BUCKEROO)
-		for k,v in buck_order_data.items():
-			print(k)
-			print(v)
-			print('-'*80)
+		# for k,v in buck_order_data.items():
+		# 	print(k)
+		# 	print(v)
+		# 	print('-'*80)
 
 		return redirect(url_for('home'))
 	flash(f'[Error] store refresh')
@@ -112,8 +112,8 @@ def update():
 #
 # *** Need to condense each SKU and sizes
 #
-@app.route('/all-items')
-def all_items():
+@app.route('/pick-list')
+def pick_list():
 	#items = Item.query.order_by(Item.sku).all()
 
 	conn = _connect_db()
@@ -121,7 +121,7 @@ def all_items():
 	items = cur.execute("SELECT * FROM Item ORDER BY sku").fetchall()
 	_close_db(conn)
 
-	return render_template('all-items.html', items=items)
+	return render_template('pick-list.html', items=items)
 
 
 @app.route('/amazon')
@@ -207,3 +207,25 @@ def buckeroo():
 	_close_db(conn)
 
 	return render_template('buckeroo.html', items=buck_items)
+
+
+# @app.route('/orders/<store>')
+# def orders(store):	
+	
+# 	print(request.args)
+
+# 	conn = _connect_db()
+# 	cur = conn.cursor()
+# 	query = f"""
+# 		SELECT * FROM Item
+# 		WHERE store={store}
+# 		ORDER BY iso_datetime DESC
+# 	"""
+# 	items = cur.execute(query).fetchall()
+# 	_close_db(conn)
+
+# 	if not items:
+# 		flash(f'Error with {store}')
+# 		return redirect(url_for('home'))
+
+# 	return render_template(f'{store}.html', items=items)

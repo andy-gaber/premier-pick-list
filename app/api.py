@@ -18,7 +18,8 @@ from app.logic import (
 	_get_nsotd_orders, 
 	_get_buckeroo_orders, 
 	_parse_order_metadata, 
-	_clean_sku
+	_clean_sku,
+	_create_pick_list
 )
 
 
@@ -128,9 +129,12 @@ def pick_list():
 	"""
 	items = cur.execute(query).fetchall()
 
+	pick_list = _create_pick_list(items)
+
 	_close_db(conn)
 
-	return render_template('pick-list.html', items=items)
+
+	return render_template('pick-list.html', pick_list=pick_list)
 
 
 @app.route('/amazon')

@@ -277,6 +277,7 @@ def _clean_sku(sku):
 			style = index_1 + '-' + index_2
 			brand_and_style = premiere + '-' + style
 			size = _size
+	
 	# STEX
 	elif brand == 'STEX' or brand == 'STX':
 		stex, color, _size = sku_array
@@ -293,6 +294,20 @@ def _clean_sku(sku):
 
 		brand_and_style = stex + '-' + color
 		size = _size
+
+	# WICKED SHORTS / WEAR SHORTS
+	elif brand == 'WICK' or brand == 'WEAR':
+		wick_or_wear, color, _size = sku_array
+		brand_and_style = wick_or_wear + '-' + color
+		size = _size
+
+	# VESE / AMDS
+	elif brand == 'VESE' or brand == 'AMDS':
+		# AMDS-RED-01-XL / VESE-GREEN-11-LRG
+		vese_or_amds, color, style, _size = sku_array
+		brand_and_style = vese_or_amds + '-' + style + '-' + color
+		size = _size
+
 	# RODEO / ACE / PLAT
 	elif brand == 'ROD' or brand == 'RODEO' or brand == 'ACE' or brand == 'PLAT':
 		# RODEO-524-XL
@@ -313,12 +328,31 @@ def _clean_sku(sku):
 			ace, women, color, style, _size = sku_array
 			brand_and_style = ace + '-' + style + '-' + women + '-' + color
 			size = _size
+	
 	# BUCKEROO
 	elif brand == 'BUCK':
 		# BUCK-WS6-BEGE/BRWN-LRG
 		buck, style, color, _size = sku_array
 		brand_and_style = buck + '-' + style + '-' + color
 		size = _size
+
+	# VICT / ENVY / SOCI JEANS
+	elif brand == 'VIC' or brand == 'VICT' or brand == 'ENVY' or brand == 'SOCI':
+		# VICT-701-XL / ENVY-5034-SML
+		if len(sku_array) == 3:
+			vic_or_envy, style, _size = sku_array
+			brand_and_style = vic_or_envy + '-' + style
+			size = _size
+		# VICT-BLACK-01-38x32 / ENVY-WHIT-101-XL / SOCI-BLU-950-32x32
+		elif len(sku_array) == 4:
+			vic_or_envy_or_soci, color, style, _size = sku_array
+			brand_and_style = vic_or_envy_or_soci + '-' + style + '-' + color
+			size = _size
+		###
+		###
+		else:
+			return sku
+
 	# VASS / BENZ
 	elif brand == 'VASS' or brand == 'BENZ':
 		# VASS-LEOP-VS135-SML
@@ -329,6 +363,7 @@ def _clean_sku(sku):
 			style = vs_map[style]
 		brand_and_style = vass + '-' + style + '-' + color
 		size = _size
+	
 	# EVERYTHING ELSE
 	else:
 		# no cleaning necessary
@@ -340,3 +375,108 @@ def _clean_sku(sku):
 
 	# cleaned_sku = brand_and_style + '-' + size
 	return brand_and_style + '-' + size
+
+
+def _create_pick_list(items):
+	sku_to_quantity = {}
+	
+	for item in items:
+		sku = item[0]
+		quantity = item[1]
+
+		if sku not in sku_to_quantity:
+			sku_to_quantity[sku] = quantity
+		else:
+			sku_to_quantity[sku] += quantity
+	
+	style_to_sizes = {}
+
+	item_size_ordering = {
+		'XS': 0,
+		'SM': 1, 
+		'ME': 2,
+		'LA': 3,    # SKU size 'LARG'
+		'LR': 4, 
+		'XL': 5, 
+		'2X': 6, 
+		'3X': 7, 
+		'4X': 8, 
+		'5X': 9, 
+		'6X': 10, 
+		'7X': 11, 
+		'8X': 12, 
+		'32': 13, 
+		'34': 14, 
+		'36': 15, 
+		'38': 16, 
+		'40': 17, 
+		'42': 18, 
+		'44': 19, 
+		'46': 20, 
+		'48': 21, 
+		'50': 22,
+	}
+
+	for sku, quantity in sku_to_quantity.items():
+		array = sku.rsplit('-', 1)
+
+		# irregular SKU, doesn't have a size
+		if len(array) == 1:
+			style_to_sizes[sku] = str(quantity)
+			continue
+
+		style, size = array
+
+		####
+		#### randomly generated coupon code, not included in pick list
+		if size[:2] not in item_size_ordering:
+			continue
+
+		if style not in style_to_sizes:
+			style_to_sizes[style] = [size + '-' + str(quantity)]
+		else:
+			style_to_sizes[style].append(size + '-' + str(quantity))
+
+
+	sorted_list_of_orders = []
+
+	for key, value in style_to_sizes.items():
+		# Only write the quantity if it is more than one.
+		if type(value) is list:
+			# sort in order: S M L XL 2XL 3XL 4XL 5XL
+			value.sort(key=lambda x: item_size_ordering[x[:2]])
+			for i in range(len(value)):
+				size, quant = value[i].split('-')
+				# transform string of size and quantity, only include quantity if greater than 1
+				# ex: 'MED-1' -> 'MED' / 'MED-2' -> 'MED (2)'
+				if int(quant) == 1:
+					value[i] = size
+				else:
+					value[i] = size + ' (' + quant + ')'
+
+			# write 'style-brand-color -> '
+			key = key + ' -> '
+
+			# write sizes after the arrow, all sizes comma separated if applicable
+			for i in range(len(value)):
+				if i + 1 == len(value):
+					key = key + str(value[i])
+				else:
+					key = key + str(value[i]) + ', '
+			key = key + '\n'
+		# value is not a list but a numerical string (ex: '1')
+		else:
+			# quantity of this item is more than one
+			if int(value) > 1:
+				# write 'style-brand-color -> '
+				key = key + ' ... (' + value + ')' + '\n'
+			# quantity of this item is one
+			else:
+				key = key + '\n'
+
+		sorted_list_of_orders.append(key)
+
+	# Sort all orders alphanumerically
+	sorted_list_of_orders.sort()
+
+	return sorted_list_of_orders

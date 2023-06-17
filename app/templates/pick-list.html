@@ -1,18 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% for item in items %}
+    {% for item in pick_list %}
     <p>
-
-        {{ item[0] }}<br>
-        {{ item[1] }}
-
-        
-        <!-- {{ item.store }}<br>
-        {{ item.order_datetime }}<br>
-        {{ item.order_num}}<br>
-        {{ item.customer }}<br>
-        {{ item.sku }} -->
+        {{ item }}
     </p>
     {% endfor %}
 {% endblock %}

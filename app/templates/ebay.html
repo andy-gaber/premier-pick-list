@@ -3,17 +3,13 @@
 {% block content %}
     {% for item in items %}
     <p>
-
+        {{ item[0] }}<br>
+        {{ item[1] }}<br>
         {{ item[2] }}<br>
-        {{ item[4] }}<br>
-        {{ item[5] }}<br>
-        {{ item[6] }}
-        
-        <!-- {{ item.store }}<br>
-        {{ item.order_datetime }}<br>
-        {{ item.order_num}}<br>
-        {{ item.customer }}<br>
-        {{ item.sku }} -->
+        {{ item[3] }}
+            {% if item[4] > 1 %}
+                ({{ item[4] }})
+            {% endif %}
     </p>
     {% endfor %}
 {% endblock %}

@@ -66,42 +66,42 @@ def update():
 		usa_pend_order_data = _parse_order_metadata(usa_pend, AMAZON)
 		can_await_order_data = _parse_order_metadata(can_await, AMAZON)
 		can_pend_order_data = _parse_order_metadata(can_pend, AMAZON)
-		# for k,v in usa_await_order_data.items():
-		# 	print(k)
-		# 	print(v)
-		# 	print('-'*80)
+		for k,v in usa_await_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
 
 		# ebay
 		ebay_orders = _get_ebay_orders()
 		ebay_order_data = _parse_order_metadata(ebay_orders, EBAY, is_ebay=True)
-		# for k,v in ebay_order_data.items():
-		# 	print(k)
-		# 	print(v)
-		# 	print('-'*80)
+		for k,v in ebay_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
 
 		# premier shirtrs
 		prem_orders = _get_prem_orders()
 		prem_order_data = _parse_order_metadata(prem_orders, PREM_SHIRTS)
-		# for k,v in prem_order_data.items():
-		# 	print(k)
-		# 	print(v)
-		# 	print('-'*80)
+		for k,v in prem_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
 
 		# new shirt of the day
 		nsotd_orders = _get_nsotd_orders()
 		nsotd_order_data = _parse_order_metadata(nsotd_orders, NSOTD)
-		# for k,v in nsotd_order_data.items():
-		# 	print(k)
-		# 	print(v)
-		# 	print('-'*80)
+		for k,v in nsotd_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
 
 		# buckeroo
 		buck_orders = _get_buckeroo_orders()
 		buck_order_data = _parse_order_metadata(buck_orders, BUCKEROO)
-		# for k,v in buck_order_data.items():
-		# 	print(k)
-		# 	print(v)
-		# 	print('-'*80)
+		for k,v in buck_order_data.items():
+			print(k)
+			print(v)
+			print('-'*80)
 
 		return redirect(url_for('home'))
 	flash(f'[Error] store refresh')
@@ -118,7 +118,16 @@ def pick_list():
 
 	conn = _connect_db()
 	cur = conn.cursor()
-	items = cur.execute("SELECT * FROM Item ORDER BY sku").fetchall()
+
+	#items = cur.execute("SELECT * FROM Item ORDER BY sku").fetchall()
+
+	query = """
+		SELECT sku, SUM(quantity)
+		FROM Item
+		GROUP BY sku
+	"""
+	items = cur.execute(query).fetchall()
+
 	_close_db(conn)
 
 	return render_template('pick-list.html', items=items)
@@ -130,12 +139,25 @@ def amazon():
 	
 	conn = _connect_db()
 	cur = conn.cursor()
+
+	# query = """
+	# 	SELECT * FROM Item
+	# 	WHERE store='Amazon'
+	# 	ORDER BY iso_datetime DESC
+	# """
+	# amazon_items = cur.execute(query).fetchall()
+	
+
 	query = """
-		SELECT * FROM Item
-		WHERE store='Amazon'
+		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+		FROM Customer_Order AS CO
+		INNER JOIN Item ON Item.order_number = CO.order_number
+		WHERE CO.store = "Amazon"
 		ORDER BY iso_datetime DESC
 	"""
+
 	amazon_items = cur.execute(query).fetchall()
+
 	_close_db(conn)
 
 	return render_template('amazon.html', items=amazon_items)
@@ -147,11 +169,21 @@ def ebay():
 	
 	conn = _connect_db()
 	cur = conn.cursor()
+
+	# query = """
+	# 	SELECT * FROM Item
+	# 	WHERE store='eBay'
+	# 	ORDER BY iso_datetime DESC
+	# """
+
 	query = """
-		SELECT * FROM Item
-		WHERE store='eBay'
+		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+		FROM Customer_Order AS CO
+		INNER JOIN Item ON Item.order_number = CO.order_number
+		WHERE CO.store = "eBay"
 		ORDER BY iso_datetime DESC
 	"""
+
 	ebay_items = cur.execute(query).fetchall()
 	_close_db(conn)
 
@@ -164,11 +196,21 @@ def prem_shirts():
 	
 	conn = _connect_db()
 	cur = conn.cursor()
+
+	# query = """
+	# 	SELECT * FROM Item
+	# 	WHERE store='Premier Shirts'
+	# 	ORDER BY iso_datetime DESC
+	# """
+
 	query = """
-		SELECT * FROM Item
-		WHERE store='Premier Shirts'
+		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+		FROM Customer_Order AS CO
+		INNER JOIN Item ON Item.order_number = CO.order_number
+		WHERE CO.store = "Premier Shirts"
 		ORDER BY iso_datetime DESC
 	"""
+
 	prem_items = cur.execute(query).fetchall()
 	_close_db(conn)
 
@@ -181,11 +223,21 @@ def nsotd():
 	
 	conn = _connect_db()
 	cur = conn.cursor()
+
+	# query = """
+	# 	SELECT * FROM Item
+	# 	WHERE store='New Shirt of the Day'
+	# 	ORDER BY iso_datetime DESC
+	# """
+
 	query = """
-		SELECT * FROM Item
-		WHERE store='New Shirt of the Day'
+		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+		FROM Customer_Order AS CO
+		INNER JOIN Item ON Item.order_number = CO.order_number
+		WHERE CO.store = "New Shirt of the Day"
 		ORDER BY iso_datetime DESC
 	"""
+
 	nsotd_items = cur.execute(query).fetchall()
 	_close_db(conn)
 
@@ -198,11 +250,21 @@ def buckeroo():
 	
 	conn = _connect_db()
 	cur = conn.cursor()
+
+	# query = """
+	# 	SELECT * FROM Item
+	# 	WHERE store='Buckeroo'
+	# 	ORDER BY iso_datetime DESC
+	# """
+
 	query = """
-		SELECT * FROM Item
-		WHERE store='Buckeroo'
+		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+		FROM Customer_Order AS CO
+		INNER JOIN Item ON Item.order_number = CO.order_number
+		WHERE CO.store = "Buckeroo"
 		ORDER BY iso_datetime DESC
 	"""
+
 	buck_items = cur.execute(query).fetchall()
 	_close_db(conn)
 

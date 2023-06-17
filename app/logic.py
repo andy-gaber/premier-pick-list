@@ -55,8 +55,7 @@ def _refresh_stores():
 		buckeroo.json()['success'] == 'true'):
 
 		create_tables()
-
-		time.sleep(5)  # sleep(120)
+		time.sleep(5)
 		return True
 	
 	return False
@@ -121,7 +120,11 @@ def _get_buckeroo_orders():
 
 # eBay's order number mapped to 'orderKey', all other order numbers mapped to 'orderNumber'
 def _parse_order_metadata(orders, store, is_ebay=False):
-	order_data = {}
+	conn = _connect_db()
+	
+	### FOR DEBUGGING
+	###
+	METADATA = {}
 
 	for order in orders:
 		if is_ebay:
@@ -148,6 +151,22 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 		# string formatted datetime, ex: "01-23-2022 11:59 PM"
 		str_datetime = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
+
+
+		
+
+		cur = conn.cursor()
+		
+		# insert order into Customer_Order table
+		new_customer_order = """
+			INSERT INTO Customer_Order (store, order_number, iso_datetime, order_datetime, customer)
+			VALUES (?, ?, ?, ?, ?);
+		"""
+		order_data = (store, order_num, iso_dt, str_datetime, customer)
+		cur.execute(new_customer_order, order_data)
+
+		conn.commit()
+
 
 		# A list of dictionaries with item information.
 		items_list = order['items']
@@ -187,39 +206,54 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 			# 	db.session.add(itm)
 			# 	db.session.commit()
 
-			conn = _connect_db()
-			cur = conn.cursor()
+
+			
 
 			# insert item into db, if item quantity is greater than 1 insert it 
 			# that number of times -- items will be grouped in route functions
-			for _ in range(quantity):
-				insert = """
-					INSERT INTO Item (store, order_num, iso_datetime, order_datetime, customer, sku)
-					VALUES (?, ?, ?, ?, ?, ?);
-				"""
-				data = (store, order_num, iso_dt, str_datetime, customer, sku)
-				cur.execute(insert, data)
+			# for _ in range(quantity):
+			# 	insert = """
+			# 		INSERT INTO Item (store, order_num, iso_datetime, order_datetime, customer, sku)
+			# 		VALUES (?, ?, ?, ?, ?, ?);
+			# 	"""
+			# 	data = (store, order_num, iso_dt, str_datetime, customer, sku)
+			# 	cur.execute(insert, data)
+
+			cur = conn.cursor()
+
+			# insert item into Item table
+			new_item = """
+				INSERT INTO Item (order_number, sku, quantity)
+				VALUES (?, ?, ?);
+			"""
+			item_data = (order_num, sku, quantity)
+			cur.execute(new_item, item_data)
+
 
 			conn.commit()
-			_close_db(conn)
+			
 
 			### FOR DEBUGGING
 			###
-			item_data = (str_datetime, store, customer, sku, description, quantity)
-			if order_num not in order_data:
-				order_data[order_num] = [item_data]
+			DATA = (str_datetime, store, customer, sku, description, quantity)
+			if order_num not in METADATA:
+				METADATA[order_num] = [DATA]
 			else:
-				order_data[order_num].append(item_data)
+				METADATA[order_num].append(DATA)
 
-	return order_data
+	_close_db(conn)
+	
+	### FOR DEBUGGING
+	###
+	return METADATA
 
 
 def _clean_sku(sku):
 	# VS127 - VS136
 	vs_map = {
-	"VS127": "VS.127", "VS128": "VS.128", "VS129": "VS.129", "VS130": "VS.130", 
-	"VS131": "VS.131", "VS132": "VS.132", "VS133": "VS.133", "VS134": "VS.134", 
-	"VS135": "VS.135", "VS136": "VS.136", "2VS134": "VS.134"
+		"VS127": "VS.127", "VS128": "VS.128", "VS129": "VS.129", "VS130": "VS.130", 
+		"VS131": "VS.131", "VS132": "VS.132", "VS133": "VS.133", "VS134": "VS.134", 
+		"VS135": "VS.135", "VS136": "VS.136", "2VS134": "VS.134"
 	}
 
 	sku_array = sku.split('-')

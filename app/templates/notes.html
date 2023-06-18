@@ -20,11 +20,27 @@
         </p>
     </form>
 
+   
+
+    <!-- list of notes -->
     {% for note in notes %}
-        <p>
-            {{ note[0] }}
-            {{ note[1] }}
-        </p>
+    <div class="row">
+        <div class="col-md-8">
+            <p>
+                {{ note[0] }}
+                {{ note[1] }}
+            </p>
+        </div>
+        <div class="col-md-2">
+            <p>
+                <!-- delete task -->
+                <a href="{{ url_for('delete_note', id=note[0]) }}">[Delete]</a>
+            </p>
+        </div>
+        <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
+    </div>
     {% endfor %}
+
+
 
 {% endblock %}

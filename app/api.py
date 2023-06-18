@@ -72,6 +72,43 @@ def notes():
 	return render_template('notes.html', title='Notes', form=form, notes=notes)
 
 
+@app.route('/delete_note/<id>')
+def delete_note(id):
+
+	conn = _connect_db()
+	cur = conn.cursor()
+	query = """
+		DELETE FROM Note
+		WHERE id = ?
+	"""
+	note = (id,)
+	cur.execute(query, note)
+	conn.commit()
+
+	flash(f'Note {id} Deleted')
+	return redirect(url_for('notes'))
+
+
+
+# @app.route('/edit_note/<id>')
+# def edit_note(id):
+
+# 	conn = _connect_db()
+# 	cur = conn.cursor()
+# 	query = """
+# 		DELETE FROM Note
+# 		WHERE id = ?
+# 	"""
+# 	note = (id,)
+# 	cur.execute(query, note)
+# 	conn.commit()
+
+# 	flash(f'Note {id} Deleted')
+# 	return redirect(url_for('notes'))
+
+
+
+
 @app.route('/update')
 def update():
 	if _refresh_stores():
@@ -172,15 +209,50 @@ def amazon():
 		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
 		FROM Customer_Order AS CO
 		INNER JOIN Item ON Item.order_number = CO.order_number
-		WHERE CO.store = "Amazon"
+		WHERE CO.store = ?
 		ORDER BY iso_datetime DESC
 	"""
+	store = (AMAZON,)
+	amazon_items = cur.execute(query, store).fetchall()
 
-	amazon_items = cur.execute(query).fetchall()
+	#amazon_items = cur.execute(query).fetchall()
 
 	_close_db(conn)
 
 	return render_template('amazon.html', items=amazon_items)
+
+
+# @app.route('/store/<store>')
+# def store(store):
+# 	#amazon_items = Item.query.filter_by(store=AMAZON).order_by(Item.order_datetime.desc()).all()
+	
+# 	conn = _connect_db()
+# 	cur = conn.cursor()
+
+# 	# query = """
+# 	# 	SELECT * FROM Item
+# 	# 	WHERE store='Amazon'
+# 	# 	ORDER BY iso_datetime DESC
+# 	# """
+# 	# amazon_items = cur.execute(query).fetchall()
+	
+
+# 	query = """
+# 		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
+# 		FROM Customer_Order AS CO
+# 		INNER JOIN Item ON Item.order_number = CO.order_number
+# 		WHERE CO.store = ?
+# 		ORDER BY iso_datetime DESC
+# 	"""
+# 	store = ("Amazon",)
+# 	amazon_items = cur.execute(query, store).fetchall()
+
+# 	#amazon_items = cur.execute(query).fetchall()
+
+# 	_close_db(conn)
+
+# 	return render_template('amazon.html', items=amazon_items)
+
 
 
 @app.route('/ebay')

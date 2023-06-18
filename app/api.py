@@ -45,11 +45,31 @@ def home():
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
+	conn = _connect_db()
+
 	form = NoteForm()
 	if form.validate_on_submit():
+		note = form.note.data
+		
+		cur = conn.cursor()
+		new_note = """
+			INSERT INTO Note (note)
+			VALUES (?);
+		"""
+		data = (note,)
+		cur.execute(new_note, data)
+		conn.commit()
+		_close_db(conn)
+
 		flash(f'Form submitted: {form.note.data}')
 		return redirect(url_for('notes'))
-	return render_template('notes.html', title='Notes', form=form)
+ 
+	cur = conn.cursor()
+	query = """ SELECT * FROM Note """
+	notes = cur.execute(query).fetchall()
+	_close_db(conn)
+
+	return render_template('notes.html', title='Notes', form=form, notes=notes)
 
 
 @app.route('/update')
@@ -109,10 +129,6 @@ def update():
 	return redirect(url_for('home'))
 
 
-# order by SKU
-#
-# *** Need to condense each SKU and sizes
-#
 @app.route('/pick-list')
 def pick_list():
 	#items = Item.query.order_by(Item.sku).all()

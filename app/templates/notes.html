@@ -19,4 +19,12 @@
             {{ form.save() }}  <!-- submit -->
         </p>
     </form>
+
+    {% for note in notes %}
+        <p>
+            {{ note[0] }}
+            {{ note[1] }}
+        </p>
+    {% endfor %}
+
 {% endblock %}

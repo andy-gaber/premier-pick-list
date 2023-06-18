@@ -19,6 +19,7 @@ def create_tables():
 	cur = conn.cursor()
 	cur.execute("DROP TABLE IF EXISTS Customer_Order")
 	cur.execute("DROP TABLE IF EXISTS Item")
+	cur.execute("DROP TABLE IF EXISTS Note")
 
 
 	order_table = """
@@ -44,8 +45,15 @@ def create_tables():
 		);
 	"""
 
+	note_table = """
+		CREATE TABLE Note (
+			id INTEGER PRIMARY KEY,
+			note TEXT
+		);
+	"""
 	cur.execute(order_table)
 	cur.execute(item_table)
+	cur.execute(note_table)
 
 	# create_table = """
 	# 	CREATE TABLE Item (

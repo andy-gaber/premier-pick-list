@@ -3,15 +3,15 @@ from wtforms import TextAreaField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, InputRequired
 
 
-# Notes
+# Note
 class NoteForm(FlaskForm):
     note = TextAreaField('Add note', validators=[InputRequired()])  # DataRequired()
     save = SubmitField('Save')
-	
 	# edit = SubmitField('Edit')
 	# delete = SubmitField('Delete')
 
 
-# class RefreshForm(FlaskForm):
-# 	note = TextAreaField('Add note', validators=[InputRequired()])  # DataRequired()
-# 	refresh = SubmitField('Refresh All Stores')
+# Edit a note
+class EditNoteForm(FlaskForm):
+    note = TextAreaField('New note', validators=[InputRequired()])  # DataRequired()
+    save = SubmitField('Save')

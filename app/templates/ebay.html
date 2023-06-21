@@ -2,14 +2,17 @@
 
 {% block content %}
     {% for item in items %}
-    <p>
-        {{ item[0] }}<br>
-        {{ item[1] }}<br>
-        {{ item[2] }}<br>
-        {{ item[3] }}
-            {% if item[4] > 1 %}
-                ({{ item[4] }})
-            {% endif %}
-    </p>
+    <div class="container">
+        <p>
+            {{ item[0] }}<br>
+            {{ item[1] }}<br>
+            {{ item[2] }}<br>
+            {{ item[3] }}
+                {% if item[4] > 1 %}
+                    ({{ item[4] }})
+                {% endif %}
+        </p>
+        <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
+    </div>
     {% endfor %}
 {% endblock %}

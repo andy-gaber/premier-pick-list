@@ -455,7 +455,10 @@ def _create_pick_list(items):
 					value[i] = size + ' (' + quant + ')'
 
 			# write 'style-brand-color -> '
-			key = key + ' -> '
+			#key = key + ' -> '
+			
+			# delimeter to split 
+			key = key + '?'
 
 			# write sizes after the arrow, all sizes comma separated if applicable
 			for i in range(len(value)):

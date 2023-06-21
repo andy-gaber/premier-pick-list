@@ -1,46 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Notes</h1>
-
     <!-- action empty string submits to current URL -->
     <!-- novalidate: let flask validate instead of web browser -->
-    <form action="" method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.note.label }}<br>             <!-- "Add note" -->
-            {{ form.note(cols=64, rows=2) }}<br>  <!-- text box -->
-            {% for error in form.note.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-       
-        <p>
-            {{ form.save() }}  <!-- submit -->
-        </p>
-    </form>
+    
 
-   
+    <div class="row">
+        <div class="col-md-4">
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+                <p>
+                    {{ form.note.label }}<br>             <!-- "Add note" -->
+                    {{ form.note(cols=64, rows=2) }}<br>  <!-- text box -->
+                    {% for error in form.note.errors %}
+                        <span style="color: red;">[{{ error }}]</span>
+                    {% endfor %}
+                </p>
+                <!-- save button -->
+                <p>{{ form.save() }}</p>
+            </form>
+        </div>
+    </div>
 
+    <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
+
+    <h2>Notes</h2>
+    <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
     <!-- list of notes -->
     {% for note in notes %}
-    <div class="row">
-        <div class="col-md-8">
-            <p>
-                {{ note[0] }}
-                {{ note[1] }}
-            </p>
+        {% set _id = note[0] %}
+        {% set msg = note[1] %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <p>
+                        {{ _id }}
+                        {{ msg }}
+                    </p>
+                </div>
+
+                <div class="col-md-2">
+                    <p>
+                        <!-- edit note -->
+                        <a href="{{ url_for('edit', id=_id) }}">Edit</a>
+                        <br>
+                        <!-- delete note -->
+                        <a href="{{ url_for('delete_note', id=_id) }}">Delete</a>
+                    </p>
+                </div>
+            </div>
+            <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
+            
         </div>
-        <div class="col-md-2">
-            <p>
-                <!-- delete task -->
-                <a href="{{ url_for('delete_note', id=note[0]) }}">[Delete]</a>
-            </p>
-        </div>
-        <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
-    </div>
     {% endfor %}
-
-
-
 {% endblock %}

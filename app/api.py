@@ -5,7 +5,7 @@ from requests.auth import HTTPBasicAuth
 
 from flask import render_template, flash, redirect, url_for, current_app, request
 from app import app
-from app.forms import NoteForm
+from app.forms import NoteForm, EditNoteForm
 #from app.models import Item, Note
 from app.db import _connect_db, _close_db
 
@@ -45,6 +45,10 @@ def home():
 
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
+	print("***")
+	print(request.method)
+	print(request.values)
+
 	conn = _connect_db()
 
 	form = NoteForm()
@@ -65,14 +69,17 @@ def notes():
 		return redirect(url_for('notes'))
  
 	cur = conn.cursor()
-	query = """ SELECT * FROM Note """
+	query = """ 
+		SELECT * 
+		FROM Note 
+	"""
 	notes = cur.execute(query).fetchall()
 	_close_db(conn)
 
 	return render_template('notes.html', title='Notes', form=form, notes=notes)
 
 
-@app.route('/delete_note/<id>')
+@app.route('/delete/<id>')
 def delete_note(id):
 
 	conn = _connect_db()
@@ -90,21 +97,38 @@ def delete_note(id):
 
 
 
-# @app.route('/edit_note/<id>')
-# def edit_note(id):
+@app.route('/edit/<id>')
+def edit(id):
+	with app.app_context():
+		current_app.edit_note_id = int(id)
 
-# 	conn = _connect_db()
-# 	cur = conn.cursor()
-# 	query = """
-# 		DELETE FROM Note
-# 		WHERE id = ?
-# 	"""
-# 	note = (id,)
-# 	cur.execute(query, note)
-# 	conn.commit()
+	return redirect(url_for('edit_note'))
 
-# 	flash(f'Note {id} Deleted')
-# 	return redirect(url_for('notes'))
+
+@app.route('/edit-note', methods=['GET', 'POST'])
+def edit_note():
+	note_id = current_app.edit_note_id
+	form = EditNoteForm()
+	
+	if form.validate_on_submit():
+		note = form.note.data
+		conn = _connect_db()
+		cur = conn.cursor()
+
+		edit = """
+			UPDATE Note
+			SET note = ?
+			WHERE Note.id = ?
+		"""
+		data = (note, note_id)
+		cur.execute(edit, data)
+		conn.commit()
+		_close_db(conn)
+
+		flash(f'Form submitted: {form.note.data}')
+		return redirect(url_for('notes'))
+
+	return render_template('edit-note.html', form=form)
 
 
 
@@ -224,18 +248,9 @@ def amazon():
 
 # @app.route('/store/<store>')
 # def store(store):
-# 	#amazon_items = Item.query.filter_by(store=AMAZON).order_by(Item.order_datetime.desc()).all()
 	
 # 	conn = _connect_db()
 # 	cur = conn.cursor()
-
-# 	# query = """
-# 	# 	SELECT * FROM Item
-# 	# 	WHERE store='Amazon'
-# 	# 	ORDER BY iso_datetime DESC
-# 	# """
-# 	# amazon_items = cur.execute(query).fetchall()
-	
 
 # 	query = """
 # 		SELECT CO.order_datetime, CO.order_number, CO.customer, Item.sku, Item.quantity
@@ -244,14 +259,11 @@ def amazon():
 # 		WHERE CO.store = ?
 # 		ORDER BY iso_datetime DESC
 # 	"""
-# 	store = ("Amazon",)
-# 	amazon_items = cur.execute(query, store).fetchall()
-
-# 	#amazon_items = cur.execute(query).fetchall()
-
+# 	store = (store,)
+# 	items = cur.execute(query, store).fetchall()
 # 	_close_db(conn)
 
-# 	return render_template('amazon.html', items=amazon_items)
+# 	return render_template(f'store/{store}.html', items=items, store=store)
 
 
 

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- action empty string submits to current URL -->
+    <!-- novalidate: let flask validate instead of web browser -->
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.note.label }}<br>             <!-- "Add note" -->
+            {{ form.note(cols=64, rows=2) }}<br>  <!-- text box -->
+            {% for error in form.note.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+       
+        <p>
+            {{ form.save() }}  <!-- save button -->
+        </p>
+    </form>
+
+
+{% endblock %}

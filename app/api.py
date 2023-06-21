@@ -39,8 +39,7 @@ def home():
 		except:
 			update = "No stores updated yet :("
 
-	header = {'name':'Premier'}
-	return render_template('home.html', title='Premier App', header=header, last_update=update)
+	return render_template('home.html', title='Premier Pick List', last_update=update)
 
 
 @app.route('/notes', methods=['GET', 'POST'])

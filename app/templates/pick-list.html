@@ -2,19 +2,19 @@
 
 {% block content %}
     {% for item in pick_list %}
-    {% set style = item.split('?')[0] %}
-    {% set sizes = item.split('?')[1] %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <p>{{ style }}</p>
+        {% set style = item.split('?')[0] %}
+        {% set sizes = item.split('?')[1] %}
+        
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    {{ style }}
+                </div>
+                <div class="col-md-4">
+                    {{ sizes }}
+                </div>
             </div>
-
-            <div class="col-md-4">
-                <p>{{ sizes }}</p>
-            </div>
+        <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
         </div>
-    <hr style="width: 100%; color: black; height: 1px; background-color:&9B9999;"/>
-    </div>
     {% endfor %}
 {% endblock %}

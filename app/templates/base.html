@@ -19,11 +19,11 @@
                     <div class="navbar-brand">Premier</div>
                     <a class="nav-item nav-link" href="{{ url_for('home') }}">Home</a>
                     <a class="nav-item nav-link" href="{{ url_for('update') }}">Update All Stores</a>
+                    <a class="nav-item nav-link" href="{{ url_for('pick_list') }}">Pick List</a>
                 </div>
 
                 <!-- Navigation Bar Right-->
                 <div class="navbar-header">
-                    <a class="nav-item nav-link" href="{{ url_for('pick_list') }}">Pick List</a>
                     <a class="nav-item nav-link" href="{{ url_for('amazon') }}">Amazon</a>
                     <a class="nav-item nav-link" href="{{ url_for('ebay') }}">eBay</a>
                     <a class="nav-item nav-link" href="{{ url_for('prem_shirts') }}">Premier Shirts</a>
@@ -32,8 +32,8 @@
                     <a class="nav-item nav-link" href="{{ url_for('notes') }}">Notes</a>
                 </div>
             </div>
+        </nav>
  
-
         <!-- Display error messages -->
         <div class="container">
             {% with messages = get_flashed_messages() %}
@@ -41,7 +41,7 @@
             
             <ul>  <!-- <ul class=flashes> -->
                 {% for message in messages %}
-                    <div class="alert alert-info" role="alert">{{ message }}</div>
+                    <div class="alert alert-success" role="alert">{{ message }}</div>
                 {% endfor %}
             </ul>
             {% endif %}

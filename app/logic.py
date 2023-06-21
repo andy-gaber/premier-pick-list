@@ -378,25 +378,15 @@ def _clean_sku(sku):
 
 
 def _create_pick_list(items):
-	sku_to_quantity = {}
-	
-	for item in items:
-		sku = item[0]
-		quantity = item[1]
-
-		if sku not in sku_to_quantity:
-			sku_to_quantity[sku] = quantity
-		else:
-			sku_to_quantity[sku] += quantity
-	
-	style_to_sizes = {}
-
-	item_size_ordering = {
+	# sort sizes in logical order
+	# tops: XSML -> 8XL
+	# bottoms: 32 -> 50
+	size_ordering = {
 		'XS': 0,
 		'SM': 1, 
 		'ME': 2,
 		'LA': 3,    # SKU size 'LARG'
-		'LR': 4, 
+		'LR': 4, 	# SKU size 'LRG'
 		'XL': 5, 
 		'2X': 6, 
 		'3X': 7, 
@@ -417,6 +407,35 @@ def _create_pick_list(items):
 		'50': 22,
 	}
 
+
+	# count all items, ex:
+	#
+	# { 
+	#	'PREM-001-SML': 1, 
+	#	'PREM-001-MED': 3, 
+	#	'PREM-002-LRG': 2, 
+	#	'PREM-002-XL': 1 
+	# }
+	sku_to_quantity = {}
+
+	for item in items:
+		sku = item[0]
+		quantity = item[1]
+
+		if sku not in sku_to_quantity:
+			sku_to_quantity[sku] = quantity
+		else:
+			sku_to_quantity[sku] += quantity
+	
+
+	# condense styles to their sizes, ex:
+	#
+	# { 
+	#	'PREM-001': [SML-1, MED-3], 
+	#	'PREM-002': [LRG-2, XL-1] 
+	# }
+	style_to_sizes = {}
+
 	for sku, quantity in sku_to_quantity.items():
 		array = sku.rsplit('-', 1)
 
@@ -427,9 +446,8 @@ def _create_pick_list(items):
 
 		style, size = array
 
-		####
-		#### randomly generated coupon code, not included in pick list
-		if size[:2] not in item_size_ordering:
+		# sku was a randomly generated coupon code, do not include in pick list
+		if size[:2] not in size_ordering:
 			continue
 
 		if style not in style_to_sizes:
@@ -438,48 +456,49 @@ def _create_pick_list(items):
 			style_to_sizes[style].append(size + '-' + str(quantity))
 
 
-	sorted_list_of_orders = []
+	# add each condensed style to list, sort in alphanumeric order, ex:
+	# [
+	#	'PREM-001 : SML, MED (3)',
+	#	'PREM-002 : LRG (2), XL'
+	# ]
+	pick_list = []
 
-	for key, value in style_to_sizes.items():
-		# Only write the quantity if it is more than one.
-		if type(value) is list:
-			# sort in order: S M L XL 2XL 3XL 4XL 5XL
-			value.sort(key=lambda x: item_size_ordering[x[:2]])
-			for i in range(len(value)):
-				size, quant = value[i].split('-')
-				# transform string of size and quantity, only include quantity if greater than 1
-				# ex: 'MED-1' -> 'MED' / 'MED-2' -> 'MED (2)'
+	for style, sizes in style_to_sizes.items():
+		# list of this style's sizes: [SML-1, MED-3]
+		if type(sizes) is list:
+			sizes.sort(key=lambda x: size_ordering[x[:2]])
+			for i in range(len(sizes)):
+				size, quant = sizes[i].split('-')
+				# transform each element of list, include quantity only if greater than 1, ex:
+				# 'SML-1' -> 'SML'
+				# 'MED-3' -> 'MED (3)'
 				if int(quant) == 1:
-					value[i] = size
+					sizes[i] = size
 				else:
-					value[i] = size + ' (' + quant + ')'
+					sizes[i] = size + ' (' + quant + ')'
 
-			# write 'style-brand-color -> '
-			#key = key + ' -> '
-			
-			# delimeter to split 
-			key = key + '?'
+			# concatenate delimeter '?' that is later used to split style from sizes 
+			style = style + '?'
 
-			# write sizes after the arrow, all sizes comma separated if applicable
-			for i in range(len(value)):
-				if i + 1 == len(value):
-					key = key + str(value[i])
+			# concatenate sizes to style, ex:
+			# 'PREM-001?SML, MED (3)'
+			for i in range(len(sizes)):
+				# last item in list, no comma necessary
+				if i + 1 == len(sizes):
+					style = style + str(sizes[i])
 				else:
-					key = key + str(value[i]) + ', '
-			key = key + '\n'
-		# value is not a list but a numerical string (ex: '1')
+					style = style + str(sizes[i]) + ', '
+			style = style + '\n'
+		# sizes is not a list if a SKU was irregular, sizes is a numerical string ('1', '2', etc)
 		else:
-			# quantity of this item is more than one
-			if int(value) > 1:
-				# write 'style-brand-color -> '
-				key = key + ' ... (' + value + ')' + '\n'
-			# quantity of this item is one
+			# more than one quantity
+			if int(sizes) > 1:
+				style = style + ' (' + sizes + ')' + '\n'
 			else:
-				key = key + '\n'
+				style = style + '\n'
 
-		sorted_list_of_orders.append(key)
+		pick_list.append(style)
 
-	# Sort all orders alphanumerically
-	sorted_list_of_orders.sort()
+	pick_list.sort()
 
-	return sorted_list_of_orders
+	return pick_list

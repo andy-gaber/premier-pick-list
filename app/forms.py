@@ -13,5 +13,5 @@ class NoteForm(FlaskForm):
 
 # Edit a note
 class EditNoteForm(FlaskForm):
-    note = TextAreaField('New note', validators=[InputRequired()])  # DataRequired()
+    note = TextAreaField('Edit note', validators=[InputRequired()])  # DataRequired()
     save = SubmitField('Save')

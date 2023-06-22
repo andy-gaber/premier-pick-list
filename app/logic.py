@@ -437,6 +437,8 @@ def _create_pick_list(items):
 	style_to_sizes = {}
 
 	for sku, quantity in sku_to_quantity.items():
+		# split style from size, ex: 
+		# 'PREM-001-SML' -> ['PREM-001', 'SML']
 		array = sku.rsplit('-', 1)
 
 		# irregular SKU, doesn't have a size

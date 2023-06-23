@@ -3,12 +3,8 @@ import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
-#from app import db
-#from app.models import Item, Note, create_tables
 from app import SQLITE_DATABASE_URI
 from app.db import create_tables, _connect_db, _close_db
-
-
 from app.sku_map import MAP
 from app.secrets import (
 	USER, 
@@ -28,7 +24,6 @@ from app.secrets import (
 	NSOTD_ENDPOINT, 
 	BUCK_ENDPOINT
 )
-
 
 AUTH = HTTPBasicAuth(USER, PASS)
 
@@ -282,6 +277,7 @@ def _clean_sku(sku):
 	elif brand == 'STEX' or brand == 'STX':
 		stex, color, _size = sku_array
 
+		# STEX<num> to sort in order by location
 		if color == 'WHT':      stex = 'STEX6'
 		elif color == 'BRIT':   stex = 'STEX7'
 		elif color == 'GRN':    stex = 'STEX5'
@@ -348,10 +344,16 @@ def _clean_sku(sku):
 			vic_or_envy_or_soci, color, style, _size = sku_array
 			brand_and_style = vic_or_envy_or_soci + '-' + style + '-' + color
 			size = _size
-		###
-		###
-		else:
-			return sku
+		# ENVY-LACE-WHT-64025-SML
+		elif len(sku_array) == 5:
+			envy, lace, color, style, _size = sku_array
+			brand_and_style = envy + '-' + style + '-' + lace + '-' + color
+			size = _size
+		# VIC-500-DENIM-JACKET-DARK-INDIGO-XL
+		elif len(sku_array) == 7:
+			vic, style, denim, jacket, color1, color2, _size = sku_array
+			brand_and_style = vic + '-' + style + '-' + denim + '-' + jacket + '-' + color1 + '-' + color2
+			size = _size
 
 	# VASS / BENZ
 	elif brand == 'VASS' or brand == 'BENZ':
@@ -364,29 +366,24 @@ def _clean_sku(sku):
 		brand_and_style = vass + '-' + style + '-' + color
 		size = _size
 	
-	# EVERYTHING ELSE
+	# EVERYTHING ELSE (no cleaning necessary)
 	else:
-		# no cleaning necessary
 		return sku
-
 
 	if size == 'XXL':
 		size = '2XL'
 
-	# cleaned_sku = brand_and_style + '-' + size
 	return brand_and_style + '-' + size
 
 
 def _create_pick_list(items):
-	# sort sizes in logical order
-	# tops: XSML -> 8XL
-	# bottoms: 32 -> 50
+	# sort sizes in logical order (tops: XSML to 8XL, bottoms: 30 to 50)
 	size_ordering = {
 		'XS': 0,
 		'SM': 1, 
 		'ME': 2,
-		'LA': 3,    # SKU size 'LARG'
-		'LR': 4, 	# SKU size 'LRG'
+		'LA': 3,  # 'LARG'
+		'LR': 4,  # 'LRG'
 		'XL': 5, 
 		'2X': 6, 
 		'3X': 7, 
@@ -395,18 +392,18 @@ def _create_pick_list(items):
 		'6X': 10, 
 		'7X': 11, 
 		'8X': 12, 
-		'32': 13, 
-		'34': 14, 
-		'36': 15, 
-		'38': 16, 
-		'40': 17, 
-		'42': 18, 
-		'44': 19, 
-		'46': 20, 
-		'48': 21, 
-		'50': 22,
+		'30': 13, 
+		'32': 14, 
+		'34': 15, 
+		'36': 16, 
+		'38': 17, 
+		'40': 18, 
+		'42': 19, 
+		'44': 20, 
+		'46': 21, 
+		'48': 22, 
+		'50': 23,
 	}
-
 
 	# count all items, ex:
 	#
@@ -427,7 +424,6 @@ def _create_pick_list(items):
 		else:
 			sku_to_quantity[sku] += quantity
 	
-
 	# condense styles to their sizes, ex:
 	#
 	# { 
@@ -457,7 +453,6 @@ def _create_pick_list(items):
 		else:
 			style_to_sizes[style].append(size + '-' + str(quantity))
 
-
 	# add each condensed style to list, sort in alphanumeric order, ex:
 	# [
 	#	'PREM-001 : SML, MED (3)',
@@ -479,7 +474,7 @@ def _create_pick_list(items):
 				else:
 					sizes[i] = size + ' (' + quant + ')'
 
-			# concatenate delimeter '?' that is later used to split style from sizes 
+			# concatenate delimeter '?', used later to split style from sizes 
 			style = style + '?'
 
 			# concatenate sizes to style, ex:

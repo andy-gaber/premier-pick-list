@@ -147,21 +147,15 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 		# string formatted datetime, ex: "01-23-2022 11:59 PM"
 		str_datetime = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
 
-
-		
-
-		cur = conn.cursor()
-		
 		# insert order into Customer_Order table
+		cur = conn.cursor()
 		new_customer_order = """
 			INSERT INTO Customer_Order (store, order_number, iso_datetime, order_datetime, customer)
 			VALUES (?, ?, ?, ?, ?);
 		"""
 		order_data = (store, order_num, iso_dt, str_datetime, customer)
 		cur.execute(new_customer_order, order_data)
-
 		conn.commit()
-
 
 		# A list of dictionaries with item information.
 		items_list = order['items']
@@ -189,42 +183,14 @@ def _parse_order_metadata(orders, store, is_ebay=False):
 
 			sku = _clean_sku(sku)
 
-			# # insert each item into db
-			# for _ in range(quantity):
-			# 	itm = Item(
-			# 		store=store, 
-			# 		order_num=order_num, 
-			# 		order_datetime=str_datetime, 
-			# 		customer=customer, 
-			# 		sku=sku, 
-			# 	)
-			# 	db.session.add(itm)
-			# 	db.session.commit()
-
-
-			
-
-			# insert item into db, if item quantity is greater than 1 insert it 
-			# that number of times -- items will be grouped in route functions
-			# for _ in range(quantity):
-			# 	insert = """
-			# 		INSERT INTO Item (store, order_num, iso_datetime, order_datetime, customer, sku)
-			# 		VALUES (?, ?, ?, ?, ?, ?);
-			# 	"""
-			# 	data = (store, order_num, iso_dt, str_datetime, customer, sku)
-			# 	cur.execute(insert, data)
-
-			cur = conn.cursor()
-
 			# insert item into Item table
+			cur = conn.cursor()
 			new_item = """
 				INSERT INTO Item (order_number, sku, quantity)
 				VALUES (?, ?, ?);
 			"""
 			item_data = (order_num, sku, quantity)
 			cur.execute(new_item, item_data)
-
-
 			conn.commit()
 			
 
@@ -405,7 +371,7 @@ def _create_pick_list(items):
 		'50': 23,
 	}
 
-	# count all items, ex:
+	# count all SKUs, ex:
 	#
 	# { 
 	#	'PREM-001-SML': 1, 
@@ -419,10 +385,13 @@ def _create_pick_list(items):
 		sku = item[0]
 		quantity = item[1]
 
-		if sku not in sku_to_quantity:
-			sku_to_quantity[sku] = quantity
-		else:
-			sku_to_quantity[sku] += quantity
+		sku_to_quantity[sku] = sku_to_quantity.get(sku, 0) + quantity
+
+		# if sku not in sku_to_quantity:
+		# 	sku_to_quantity[sku] = quantity
+		# else:
+		# 	sku_to_quantity[sku] += quantity
+	
 	
 	# condense styles to their sizes, ex:
 	#
@@ -461,7 +430,7 @@ def _create_pick_list(items):
 	pick_list = []
 
 	for style, sizes in style_to_sizes.items():
-		# list of this style's sizes: [SML-1, MED-3]
+		# list of the style's sizes, ex: [SML-1, MED-3]
 		if type(sizes) is list:
 			sizes.sort(key=lambda x: size_ordering[x[:2]])
 			for i in range(len(sizes)):

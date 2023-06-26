@@ -392,7 +392,7 @@ def _create_pick_list(items):
 		# else:
 		# 	sku_to_quantity[sku] += quantity
 	
-	
+
 	# condense styles to their sizes, ex:
 	#
 	# { 
@@ -424,8 +424,8 @@ def _create_pick_list(items):
 
 	# add each condensed style to list, sort in alphanumeric order, ex:
 	# [
-	#	'PREM-001 : SML, MED (3)',
-	#	'PREM-002 : LRG (2), XL'
+	#	'PREM-001 -> SML, MED (3)',
+	#	'PREM-002 -> LRG (2), XL'
 	# ]
 	pick_list = []
 
@@ -443,7 +443,7 @@ def _create_pick_list(items):
 				else:
 					sizes[i] = size + ' (' + quant + ')'
 
-			# concatenate delimeter '?', used later to split style from sizes 
+			# concatenate delimeter '?', used in front end to split style from sizes 
 			style = style + '?'
 
 			# concatenate sizes to style, ex:

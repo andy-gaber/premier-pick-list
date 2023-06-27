@@ -12,7 +12,7 @@ def _close_db(conn):
 	conn.close()
 
 
-def _get_metadata(store):
+def _get_metadata(store: str) -> list[tuple[str, str, str, str, int]]:
 	conn = _connect_db()
 	cur = conn.cursor()	
 
@@ -24,7 +24,7 @@ def _get_metadata(store):
 		ORDER BY iso_datetime DESC
 	"""
 	data = (store,)
-	items = cur.execute(query, data).fetchall()
+	items: list[tuple[str, str, str, str, int]] = cur.execute(query, data).fetchall()
 
 	_close_db(conn)
 

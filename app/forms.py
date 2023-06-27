@@ -7,8 +7,6 @@ from wtforms.validators import ValidationError, DataRequired, InputRequired
 class NoteForm(FlaskForm):
     note = TextAreaField('Add note', validators=[InputRequired()])  # DataRequired()
     save = SubmitField('Save')
-	# edit = SubmitField('Edit')
-	# delete = SubmitField('Delete')
 
 
 # Edit a note

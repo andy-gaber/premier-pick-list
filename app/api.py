@@ -89,7 +89,7 @@ def update():
 def pick_list():
 	conn = _connect_db()
 	cur = conn.cursor()
-	query: str = """
+	query = """
 		SELECT sku, SUM(quantity)
 		FROM Item
 		GROUP BY sku

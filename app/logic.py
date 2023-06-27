@@ -2,6 +2,7 @@ import time
 import datetime
 import requests
 from requests.auth import HTTPBasicAuth
+from typing import Any
 
 from app import SQLITE_DATABASE_URI
 from app.db import create_tables, _connect_db, _close_db
@@ -30,7 +31,7 @@ AUTH = HTTPBasicAuth(USER, PASS)
 
 # get up to date order data from all stoers
 # remove stale order data from db
-def _refresh_stores():
+def _refresh_stores() -> bool:
 	try:
 		amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=AUTH)
 		amazon_can = requests.post(AMZ_CAN_REFRESH_ENDPOINT, auth=AUTH)
@@ -56,81 +57,107 @@ def _refresh_stores():
 	return False
 	
 
-def _get_amazon_orders():
-	# USA orders that are awaiting shipment
+def _get_amazon_orders() -> tuple[list[dict[str, Any]]]:
+	# Amazon order metadata - Amazon sales restricted to US and Canada
+	# Amazon sales data is categorized into "awaiting shipment" and "pending fulfillment" 
 	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=AUTH)
-	# USA orders that are pending fulfillment
 	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=AUTH)
-	# Canadian orders that are awaiting shipment
 	amazon_can_await_resp = requests.get(AMZ_CAN_AWAIT_ENDPOINT, auth=AUTH)
-	# Canadian orders that are pending fulfillment
 	amazon_can_pend_resp = requests.get(AMZ_CAN_PEND_ENDPOINT, auth=AUTH)
-	# Lists
-	amazon_usa_await_orders = amazon_usa_await_resp.json()['orders']
-	amazon_usa_pend_orders = amazon_usa_pend_resp.json()['orders']
-	amazon_can_await_orders = amazon_can_await_resp.json()['orders']
-	amazon_can_pend_orders = amazon_can_pend_resp.json()['orders']
 
-	num_orders = str(len(amazon_usa_await_orders) + len(amazon_usa_pend_orders) + len(amazon_can_await_orders) + len(amazon_can_pend_orders))
-	print('\n-> Amazon: ' + num_orders + ' Orders\n')
+	amazon_usa_await_orders: list[dict[str, Any]] = amazon_usa_await_resp.json()['orders']
+	amazon_usa_pend_orders: list[dict[str, Any]] = amazon_usa_pend_resp.json()['orders']
+	amazon_can_await_orders: list[dict[str, Any]] = amazon_can_await_resp.json()['orders']
+	amazon_can_pend_orders: list[dict[str, Any]] = amazon_can_pend_resp.json()['orders']
+
+	# For debugging!
+	#
+	# num_orders = str(
+	# 	len(amazon_usa_await_orders) + 
+	# 	len(amazon_usa_pend_orders) + 
+	# 	len(amazon_can_await_orders) + 
+	# 	len(amazon_can_pend_orders)
+	# )
+	# print('\n-> Amazon: ' + num_orders + ' Orders\n')
 
 	return (amazon_usa_await_orders, amazon_usa_pend_orders, amazon_can_await_orders, amazon_can_pend_orders)
 
 
-def _get_ebay_orders():
+def _get_ebay_orders() -> list[dict[str, Any]]:
+	# eBay order metadata
 	ebay_await_resp = requests.get(EBAY_ENDPOINT, auth=AUTH)
-	# List
-	ebay_orders = ebay_await_resp.json()['orders']
-	num_orders = str(len(ebay_orders))
-	print('\n-> eBay: ' + num_orders + ' Orders\n')
+	ebay_orders: list[dict[str, Any]] = ebay_await_resp.json()['orders']
+	
+	# For debugging!
+	#
+	# num_orders = str(len(ebay_orders))
+	# print('\n-> eBay: ' + num_orders + ' Orders\n')
+	
 	return ebay_orders
 
 
-def _get_prem_orders():
+def _get_prem_orders() -> list[dict[str, Any]]:
+	# Premier Shirts order metadata
 	prem_shirts_await_resp = requests.get(PREM_SHIRTS_ENDPOINT, auth=AUTH)
-	# List
-	prem_shirts_orders = prem_shirts_await_resp.json()['orders']
-	num_orders = str(len(prem_shirts_orders))
-	print('\n-> Premier Shirts: ' + num_orders + ' Orders\n')
+	prem_shirts_orders: list[dict[str, Any]] = prem_shirts_await_resp.json()['orders']
+	
+	# For debugging!
+	#
+	# num_orders = str(len(prem_shirts_orders))
+	# print('\n-> Premier Shirts: ' + num_orders + ' Orders\n')
+	
 	return prem_shirts_orders
 
 
-def _get_nsotd_orders():
+def _get_nsotd_orders() -> list[dict[str, Any]]:
+	# New Shirt of the Day order metadata
 	nsotd_await_resp = requests.get(NSOTD_ENDPOINT, auth=AUTH)
-	# List
-	nsotd_orders = nsotd_await_resp.json()['orders']
-	num_orders = str(len(nsotd_orders))
-	print('\n-> New Shirt of the Day: ' + num_orders + ' Orders\n')
+	nsotd_orders: list[dict[str, Any]] = nsotd_await_resp.json()['orders']
+
+	# For debugging!
+	#
+	# num_orders = str(len(nsotd_orders))
+	# print('\n-> New Shirt of the Day: ' + num_orders + ' Orders\n')
+	
 	return nsotd_orders
 
 
-def _get_buckeroo_orders():
+def _get_buckeroo_orders() -> list[dict[str, Any]]:
+	# Buckeroo order metadata
 	buck_await_resp = requests.get(BUCK_ENDPOINT, auth=AUTH)
-	# List
-	buck_orders = buck_await_resp.json()['orders']
-	num_orders = str(len(buck_orders))
-	print('\n-> Buckeroo: ' + num_orders + ' Orders\n')
+	buck_orders: list[dict[str, Any]] = buck_await_resp.json()['orders']
+	
+	# For debugging!
+	#
+	# num_orders = str(len(buck_orders))
+	# print('\n-> Buckeroo: ' + num_orders + ' Orders\n')
+	
 	return buck_orders
 
 
 # eBay's order number mapped to 'orderKey', all other order numbers mapped to 'orderNumber'
-def _parse_store_metadata(orders, store, is_ebay=False):
+def _parse_store_metadata(
+	orders: list[dict[str, Any]], 
+	store: str, 
+	is_ebay: bool = False
+) -> None:
+	
 	conn = _connect_db()
 	
-	### FOR DEBUGGING
-	###
-	METADATA = {}
+	# For debugging!
+	#
+	# METADATA = {}
 
 	for order in orders:
 		if is_ebay:
-			order_num = order['orderKey']
+			order_num: str = order['orderKey']
 		else:
-			order_num = order['orderNumber']
+			order_num: str = order['orderNumber']
 
-		customer = order['billTo']['name']
+		customer: str = order['billTo']['name']
 
 		# ISO datetime, ex: 2023-05-25T14:50:07.0000000
-		iso_dt = order['orderDate']
+		iso_dt: str = order['orderDate']
 
 		# remove milliseconds, split date and time
 		date, _time = iso_dt.split('.')[0].split('T')  # YYYY-MM-DD, hh:mm:ss
@@ -145,7 +172,7 @@ def _parse_store_metadata(orders, store, is_ebay=False):
 		)
 
 		# string formatted datetime, ex: "01-23-2022 11:59 PM"
-		str_datetime = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
+		str_datetime: str = order_datetime.strftime('%m-%d-%Y %I:%M %p')	
 
 		# insert order into Customer_Order table
 		cur = conn.cursor()
@@ -158,12 +185,12 @@ def _parse_store_metadata(orders, store, is_ebay=False):
 		conn.commit()
 
 		# A list of dictionaries with item information.
-		items_list = order['items']
+		items_list: list[dict[str, Any]] = order['items']
 
 		for item in items_list:
-			sku = item['sku']
-			description = item['name']   # description we provided
-			quantity = item['quantity']  # int
+			sku: str = item['sku']
+			description: str = item['name']   # description we provided
+			quantity: int = item['quantity']
 
 			# Clean the SKU
 			#  
@@ -193,34 +220,33 @@ def _parse_store_metadata(orders, store, is_ebay=False):
 			cur.execute(new_item, item_data)
 			conn.commit()
 			
-
-			### FOR DEBUGGING
-			###
-			DATA = (str_datetime, store, customer, sku, description, quantity)
-			if order_num not in METADATA:
-				METADATA[order_num] = [DATA]
-			else:
-				METADATA[order_num].append(DATA)
+			# For debugging!
+			#
+			# DATA = (str_datetime, store, customer, sku, description, quantity)
+			# if order_num not in METADATA:
+			# 	METADATA[order_num] = [DATA]
+			# else:
+			# 	METADATA[order_num].append(DATA)
 
 	_close_db(conn)
 	
-	### FOR DEBUGGING
-	###
-	return METADATA
+	# For debugging!
+	#
+	# return METADATA
 
 
-def _clean_sku(sku):
-	# VS127 - VS136
+def _clean_sku(sku: str) -> str:
+	# Modify VS127 - VS136 for logical sorting
 	vs_map = {
 		"VS127": "VS.127", "VS128": "VS.128", "VS129": "VS.129", "VS130": "VS.130", 
 		"VS131": "VS.131", "VS132": "VS.132", "VS133": "VS.133", "VS134": "VS.134", 
 		"VS135": "VS.135", "VS136": "VS.136", "2VS134": "VS.134"
 	}
 
-	sku_array = sku.split('-')
-	brand = sku_array[0]
-	brand_and_style = None
-	size = None
+	sku_array: list[str] = sku.split('-')
+	brand: str = sku_array[0]
+	brand_and_style: str
+	size: str
 
 	# PREMIER
 	if brand == 'PREM':
@@ -342,7 +368,7 @@ def _clean_sku(sku):
 	return brand_and_style + '-' + size
 
 
-def _create_pick_list(items):
+def _create_pick_list(items: list[tuple[str, int]]):
 	# sort sizes in logical order (tops: XSML to 8XL, bottoms: 30 to 50)
 	size_ordering = {
 		'XS': 0,
@@ -371,40 +397,31 @@ def _create_pick_list(items):
 		'50': 23,
 	}
 
-	# count all SKUs, ex:
-	#
-	# { 
+	# Count all SKUs, ex)
+	# dict = { 
 	#	'PREM-001-SML': 1, 
 	#	'PREM-001-MED': 3, 
 	#	'PREM-002-LRG': 2, 
 	#	'PREM-002-XL': 1 
 	# }
-	sku_to_quantity = {}
+	sku_to_quantity: dict[str, int] = {}
 
 	for item in items:
-		sku = item[0]
-		quantity = item[1]
-
+		sku: str = item[0]
+		quantity: int = item[1]
 		sku_to_quantity[sku] = sku_to_quantity.get(sku, 0) + quantity
 
-		# if sku not in sku_to_quantity:
-		# 	sku_to_quantity[sku] = quantity
-		# else:
-		# 	sku_to_quantity[sku] += quantity
-	
-
-	# condense styles to their sizes, ex:
-	#
-	# { 
+	# Condense styles to their sizes, ex)
+	# dict = { 
 	#	'PREM-001': [SML-1, MED-3], 
 	#	'PREM-002': [LRG-2, XL-1] 
 	# }
-	style_to_sizes = {}
+	style_to_sizes: dict[str, str | list[str]] = {}
 
 	for sku, quantity in sku_to_quantity.items():
 		# split style from size, ex: 
 		# 'PREM-001-SML' -> ['PREM-001', 'SML']
-		array = sku.rsplit('-', 1)
+		array: list[str] = sku.rsplit('-', 1)
 
 		# irregular SKU, doesn't have a size
 		if len(array) == 1:
@@ -422,12 +439,12 @@ def _create_pick_list(items):
 		else:
 			style_to_sizes[style].append(size + '-' + str(quantity))
 
-	# add each condensed style to list, sort in alphanumeric order, ex:
-	# [
+	# Add each condensed style to list, sort in alphanumeric order, ex)
+	# list = [
 	#	'PREM-001 -> SML, MED (3)',
 	#	'PREM-002 -> LRG (2), XL'
 	# ]
-	pick_list = []
+	pick_list: list[str] = []
 
 	for style, sizes in style_to_sizes.items():
 		# list of the style's sizes, ex: [SML-1, MED-3]
@@ -435,9 +452,12 @@ def _create_pick_list(items):
 			sizes.sort(key=lambda x: size_ordering[x[:2]])
 			for i in range(len(sizes)):
 				size, quant = sizes[i].split('-')
-				# transform each element of list, include quantity only if greater than 1, ex:
+				# transform each element of list, include quantity only if greater than 1, ex)
 				# 'SML-1' -> 'SML'
 				# 'MED-3' -> 'MED (3)'
+				
+				# if quant == '1':
+				
 				if int(quant) == 1:
 					sizes[i] = size
 				else:
@@ -446,7 +466,7 @@ def _create_pick_list(items):
 			# concatenate delimeter '?', used in front end to split style from sizes 
 			style = style + '?'
 
-			# concatenate sizes to style, ex:
+			# concatenate sizes to style, ex) 
 			# 'PREM-001?SML, MED (3)'
 			for i in range(len(sizes)):
 				# last item in list, no comma necessary

@@ -114,7 +114,7 @@ def _get_buckeroo_orders():
 
 
 # eBay's order number mapped to 'orderKey', all other order numbers mapped to 'orderNumber'
-def _parse_order_metadata(orders, store, is_ebay=False):
+def _parse_store_metadata(orders, store, is_ebay=False):
 	conn = _connect_db()
 	
 	### FOR DEBUGGING

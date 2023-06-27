@@ -2,6 +2,7 @@ import time
 import datetime
 import requests
 from requests.auth import HTTPBasicAuth
+from typing import Any
 
 from flask import render_template, flash, redirect, url_for, current_app, request
 from app import app
@@ -16,17 +17,17 @@ from app.logic import (
 	_get_prem_orders, 
 	_get_nsotd_orders, 
 	_get_buckeroo_orders, 
-	_parse_order_metadata, 
+	_parse_store_metadata, 
 	_clean_sku,
 	_create_pick_list
 )
 
 
-AMAZON = 'Amazon'
-EBAY = 'eBay'
-PREM_SHIRTS = 'Premier Shirts'
-NSOTD = 'New Shirt of the Day'
-BUCKEROO = 'Buckeroo'
+AMAZON: str = 'Amazon'
+EBAY: str = 'eBay'
+PREM_SHIRTS: str = 'Premier Shirts'
+NSOTD: str = 'New Shirt of the Day'
+BUCKEROO: str = 'Buckeroo'
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -34,7 +35,7 @@ def home():
 	# display date and time of most recent update for all stores
 	with app.app_context():
 		try:
-			update = current_app.last_update
+			update: str = current_app.last_update
 		except:
 			update = "No stores updated yet :("
 
@@ -48,32 +49,38 @@ def update():
 
 		# set date and time when all stores were last updated, ex: "Jan 31 2022 11:59 PM"
 		with app.app_context():
-			current_app.last_update = datetime.datetime.now().strftime('%b %d %Y %I:%M %p')
+			current_app.last_update: str = datetime.datetime.now().strftime('%b %d %Y %I:%M %p')
 
 		# amazon
+		usa_await: list[dict[str, Any]]
+		usa_pend: list[dict[str, Any]]
+		can_await: list[dict[str, Any]]
+		can_pend: list[dict[str, Any]]
 		usa_await, usa_pend, can_await, can_pend = _get_amazon_orders()
-		usa_await_order_data = _parse_order_metadata(usa_await, AMAZON)
-		usa_pend_order_data = _parse_order_metadata(usa_pend, AMAZON)
-		can_await_order_data = _parse_order_metadata(can_await, AMAZON)
-		can_pend_order_data = _parse_order_metadata(can_pend, AMAZON)
+
+		_parse_store_metadata(usa_await, AMAZON)
+		_parse_store_metadata(usa_pend, AMAZON)
+		_parse_store_metadata(can_await, AMAZON)
+		_parse_store_metadata(can_pend, AMAZON)
 
 		# ebay
-		ebay_orders = _get_ebay_orders()
-		ebay_order_data = _parse_order_metadata(ebay_orders, EBAY, is_ebay=True)
+		ebay_orders: list[dict[str, Any]] = _get_ebay_orders()
+		_parse_store_metadata(ebay_orders, EBAY, is_ebay=True)
 
 		# premier shirtrs
-		prem_orders = _get_prem_orders()
-		prem_order_data = _parse_order_metadata(prem_orders, PREM_SHIRTS)
+		prem_orders: list[dict[str, Any]] = _get_prem_orders()
+		_parse_store_metadata(prem_orders, PREM_SHIRTS)
 
 		# new shirt of the day
-		nsotd_orders = _get_nsotd_orders()
-		nsotd_order_data = _parse_order_metadata(nsotd_orders, NSOTD)
+		nsotd_orders: list[dict[str, Any]] = _get_nsotd_orders()
+		_parse_store_metadata(nsotd_orders, NSOTD)
 	
 		# buckeroo
-		buck_orders = _get_buckeroo_orders()
-		buck_order_data = _parse_order_metadata(buck_orders, BUCKEROO)
+		buck_orders: list[dict[str, Any]] = _get_buckeroo_orders()
+		_parse_store_metadata(buck_orders, BUCKEROO)
 
 		return redirect(url_for('home'))
+	
 	flash(f'[Error] store refresh')
 	return redirect(url_for('home'))
 
@@ -82,44 +89,44 @@ def update():
 def pick_list():
 	conn = _connect_db()
 	cur = conn.cursor()
-	query = """
+	query: str = """
 		SELECT sku, SUM(quantity)
 		FROM Item
 		GROUP BY sku
 	"""
-	items = cur.execute(query).fetchall()
-	pick_list = _create_pick_list(items)
+	items: list[tuple[str, int]] = cur.execute(query).fetchall()
+	pick_list: list[str] = _create_pick_list(items)
 	_close_db(conn)
 	return render_template('pick-list.html', pick_list=pick_list)
 
 
 @app.route('/amazon')
 def amazon():
-	items = _get_metadata(AMAZON)	
+	items: list[tuple[str, str, str, str, int]] = _get_metadata(AMAZON)	
 	return render_template('amazon.html', items=items)
 
 
 @app.route('/ebay')
 def ebay():
-	items = _get_metadata(EBAY)
+	items: list[tuple[str, str, str, str, int]] = _get_metadata(EBAY)
 	return render_template('ebay.html', items=items)
 
 
 @app.route('/premier-shirts')
 def prem_shirts():
-	items = _get_metadata(PREM_SHIRTS)
+	items: list[tuple[str, str, str, str, int]] = _get_metadata(PREM_SHIRTS)
 	return render_template('premier-shirts.html', items=items)
 
 
 @app.route('/new-shirt-of-the-day')
 def nsotd():
-	items = _get_metadata(NSOTD)
+	items: list[tuple[str, str, str, str, int]] = _get_metadata(NSOTD)
 	return render_template('new-shirt-of-the-day.html', items=items)
 
 
 @app.route('/buckeroo')
 def buckeroo():
-	items = _get_metadata(BUCKEROO)
+	items: list[tuple[str, str, str, str, int]] = _get_metadata(BUCKEROO)
 	return render_template('buckeroo.html', items=items)
 
 
@@ -130,7 +137,7 @@ def notes():
 	form = NoteForm()
 	# add new note
 	if form.validate_on_submit():
-		note = form.note.data
+		note: str = form.note.data
 		
 		cur = conn.cursor()
 		new_note = """
@@ -150,7 +157,7 @@ def notes():
 		SELECT * 
 		FROM Note 
 	"""
-	notes = cur.execute(query).fetchall()
+	notes: list(tuple(str)) = cur.execute(query).fetchall()
 	_close_db(conn)
 
 	return render_template('notes.html', title='Notes', form=form, notes=notes)
@@ -183,11 +190,11 @@ def edit(id):
 
 @app.route('/edit-note', methods=['GET', 'POST'])
 def edit_note():
-	note_id = current_app.edit_note_id
+	note_id: int = current_app.edit_note_id
 	form = EditNoteForm()
 	
 	if form.validate_on_submit():
-		note = form.note.data
+		note: str = form.note.data
 		conn = _connect_db()
 		cur = conn.cursor()
 

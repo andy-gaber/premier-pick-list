@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h4>{{ last_update }}</h4>
+    {% if last_update %}
+    <h4>Stores last updated on {{ last_update }}</h4>
+    {% else %}
+    <h4>Stores have not been updated :(</h4>
+    {% endif %}
 {% endblock %}

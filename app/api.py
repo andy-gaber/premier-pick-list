@@ -4,7 +4,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from typing import Any
 
-from flask import render_template, flash, redirect, url_for, current_app, request
+from flask import render_template, flash, redirect, url_for, current_app, request, abort
 from app import app
 from app.forms import NoteForm, EditNoteForm
 from app.db import _connect_db, _close_db, _get_metadata
@@ -34,12 +34,18 @@ BUCKEROO: str = 'Buckeroo'
 def home():
 	# display date and time of most recent update for all stores
 	with app.app_context():
+		update: str | None
 		try:
-			update: str = current_app.last_update
+			update = current_app.last_update
 		except:
-			update = "No stores updated yet :("
+			update = None
 
 	return render_template('home.html', title='Premier Pick List', last_update=update)
+
+
+@app.errorhandler(500)
+def internal_error(error):
+	return render_template('500.html', error=error), 500
 
 
 @app.route('/update')
@@ -47,9 +53,9 @@ def update():
 	if _refresh_stores():
 		flash('All Stores Updated!')
 
-		# set date and time when all stores were last updated, ex: "Jan 31 2022 11:59 PM"
+		# set date and time when all stores were last updated, ex: "Jan 31, 11:59 PM"
 		with app.app_context():
-			current_app.last_update: str = datetime.datetime.now().strftime('%b %d %Y %I:%M %p')
+			current_app.last_update: str = datetime.datetime.now().strftime('%b %d, %I:%M %p')
 
 		# amazon
 		usa_await: list[dict[str, Any]]
@@ -80,10 +86,18 @@ def update():
 		_parse_store_metadata(buck_orders, BUCKEROO)
 
 		return redirect(url_for('home'))
-	
-	flash(f'[Error] store refresh')
-	return redirect(url_for('home'))
+	else:
+		abort(500)
 
+	
+	# flash(f'[Error] store refresh')
+	# return redirect(url_for('home'))
+
+@app.route('/500')
+def error500():
+	abort(500)
+
+	
 
 @app.route('/pick-list')
 def pick_list():

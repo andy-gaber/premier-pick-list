@@ -88,15 +88,6 @@ def update():
 		return redirect(url_for('home'))
 	else:
 		abort(500)
-
-	
-	# flash(f'[Error] store refresh')
-	# return redirect(url_for('home'))
-
-@app.route('/500')
-def error500():
-	abort(500)
-
 	
 
 @app.route('/pick-list')

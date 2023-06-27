@@ -39,23 +39,23 @@ def _refresh_stores() -> bool:
 		prem = requests.post(PREM_SHIRTS_REFRESH_ENDPOINT, auth=AUTH)
 		nsotd = requests.post(NSOTD_REFRESH_ENDPOINT, auth=AUTH)
 		buckeroo = requests.post(BUCK_REFRESH_ENDPOINT, auth=AUTH)
+
+		if (
+			amazon_usa.json()['success'] == 'true' 
+			and amazon_can.json()['success'] == 'true' 
+			and ebay.json()['success'] == 'true' 
+			and prem.json()['success'] == 'true' 
+			and nsotd.json()['success'] == 'true' 
+			and buckeroo.json()['success'] == 'true'
+		):
+			create_tables()
+			time.sleep(5)
+			return True
+
 	except Exception as e:
 		print(e)
 		return False
 
-	if (amazon_usa.json()['success'] == 'true' and
-		amazon_can.json()['success'] == 'true' and
-		ebay.json()['success'] == 'true' and
-		prem.json()['success'] == 'true' and
-		nsotd.json()['success'] == 'true' and
-		buckeroo.json()['success'] == 'true'):
-
-		create_tables()
-		time.sleep(5)
-		return True
-	
-	return False
-	
 
 def _get_amazon_orders() -> tuple[list[dict[str, Any]]]:
 	# Amazon order metadata - Amazon sales restricted to US and Canada

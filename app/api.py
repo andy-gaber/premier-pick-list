@@ -63,7 +63,6 @@ def update():
 		can_await: list[dict[str, Any]]
 		can_pend: list[dict[str, Any]]
 		usa_await, usa_pend, can_await, can_pend = _get_amazon_orders()
-
 		_parse_store_metadata(usa_await, AMAZON)
 		_parse_store_metadata(usa_pend, AMAZON)
 		_parse_store_metadata(can_await, AMAZON)

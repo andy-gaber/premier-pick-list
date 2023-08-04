@@ -29,8 +29,8 @@ from app.secrets import (
 AUTH = HTTPBasicAuth(USER, PASS)
 
 
-# get up to date order data from all stoers
-# remove stale order data from db
+# get up to date order data from all stores; this drops all tables 
+# if they exist to remove stale data from db
 def _refresh_stores() -> bool:
 	try:
 		amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=AUTH)
@@ -49,7 +49,6 @@ def _refresh_stores() -> bool:
 			and buckeroo.json()['success'] == 'true'
 		):
 			create_tables()
-			time.sleep(5)
 			return True
 
 	except Exception as e:
@@ -58,7 +57,7 @@ def _refresh_stores() -> bool:
 
 
 def _get_amazon_orders() -> tuple[list[dict[str, Any]]]:
-	# Amazon order metadata - Amazon sales restricted to US and Canada
+	# Amazon order metadata (Amazon sales restricted to United States and Canada)
 	# Amazon sales data is categorized into "awaiting shipment" and "pending fulfillment" 
 	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=AUTH)
 	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=AUTH)
@@ -135,12 +134,13 @@ def _get_buckeroo_orders() -> list[dict[str, Any]]:
 	return buck_orders
 
 
-# eBay's order number mapped to 'orderKey', all other order numbers mapped to 'orderNumber'
 def _parse_store_metadata(
 	orders: list[dict[str, Any]], 
 	store: str, 
 	is_ebay: bool = False
 ) -> None:
+	# bool is_ebay is used because eBay's order number is mapped from key 'orderKey', 
+	# while all other stores order numbers are mapped from key 'orderNumber'
 	
 	conn = _connect_db()
 	
@@ -207,7 +207,7 @@ def _parse_store_metadata(
 				sku = sku[:-4]
 			elif sku[-2:] == '-D': 
 				sku = sku[:-2]
-
+				
 			sku = _clean_sku(sku)
 
 			# insert item into Item table
@@ -455,9 +455,6 @@ def _create_pick_list(items: list[tuple[str, int]]):
 				# transform each element of list, include quantity only if greater than 1, ex)
 				# 'SML-1' -> 'SML'
 				# 'MED-3' -> 'MED (3)'
-				
-				# if quant == '1':
-				
 				if int(quant) == 1:
 					sizes[i] = size
 				else:

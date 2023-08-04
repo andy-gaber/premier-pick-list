@@ -369,7 +369,7 @@ def _clean_sku(sku: str) -> str:
 
 
 def _create_pick_list(items: list[tuple[str, int]]):
-	# sort sizes in logical order (tops: XSML to 8XL, bottoms: 30 to 50)
+	# sort sizes in logical order (tops: XSML to 8XL, bottoms: 30 to 54)
 	size_ordering = {
 		'XS': 0,
 		'SM': 1, 
@@ -395,6 +395,8 @@ def _create_pick_list(items: list[tuple[str, int]]):
 		'46': 21, 
 		'48': 22, 
 		'50': 23,
+		'52': 24,
+		'54': 25,
 	}
 
 	# Count all SKUs, ex)

@@ -6,7 +6,7 @@ The API parses a large volume of customer-order JSON data to generate a sorted l
 
 The company sells apparel through its five online stores. Each store’s customer-order JSON data is requested from the company’s web-based order management system. The data from each store is then parsed, cleaned, and normalized before collectively being sorted. Items are first grouped by SKU, however each item of clothing is available in multiple sizes, so a SKU’s sizes must then also be grouped and sorted logically as well. The sorted pick list is seen below.
 
-![after](https://github.com/andy-gaber/premier-pick-list/assets/44306593/eaa7621a-f37d-42fb-a28f-588475362cb7)
+<img width="748" alt="after" src="https://github.com/andy-gaber/premier-pick-list/assets/44306593/0f6c9af8-8b1e-4964-bcd2-2219f2e51bb5">
 
 The API was developed with Python, and implements Flask to handle HTTP requests and SQLite as the database engine. Each time a pick list is generated the database tables are cleared of stale data, then repopulated with fresh customer-order data from all five online stores. In addition to the pick list, the API also includes logic for quality control — each individual store has its own HTTP endpoint that displays the relevant customer-order metadata for that particular store, and users have he ability to post and view notes.
 

@@ -2,7 +2,7 @@ This private API was developed for an eCommerce business that receives approxima
 
 The API parses a large volume of customer-order JSON data to generate a sorted list (i.e. pick list) of all items and their quantities ordered alphanumerically by Stock Keeping Unit (SKU). This allows items to be picked in order by warehouse location. Before the API was developed the pick list was arbitrary and unordered (as seen below) which resulted in an inefficient circuitous journey throughout the warehouse and a significant waste of time and resources.
 
-<img width="298" alt="before" src="https://github.com/andy-gaber/premier-pick-list/assets/44306593/ef98e66d-7a29-4c22-aa2d-82b95f3f04a6">
+<img width="432" alt="before" src="https://github.com/andy-gaber/premier-pick-list/assets/44306593/975c2872-ca3f-4f6d-87bb-37e166f93542">
 
 The company sells apparel through its five online stores. Each store’s customer-order JSON data is requested from the company’s web-based order management system. The data from each store is then parsed, cleaned, and normalized before collectively being sorted. Items are first grouped by SKU, however each item of clothing is available in multiple sizes, so a SKU’s sizes must then also be grouped and sorted logically as well. The sorted pick list is seen below.
 

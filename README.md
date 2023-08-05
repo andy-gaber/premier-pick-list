@@ -1,6 +1,6 @@
 This private API was developed for an eCommerce business that receives approximately 200 daily online orders. Each order contains one or more items, and every item must be physically picked from the company’s sizable inventory warehouse before being packed and shipped. Order-picking is a time-consuming effort, yet the company strives to provide exceptional customer service by shipping orders within 24 hours of purchase.
 
-The API parses a large volume of customer-order JSON data to generate a sorted list (i.e. pick list) of all items and their quantities ordered alphanumerically by Stock Keeping Unit (SKU). This allows items to be picked in order by warehouse location. Before the API was developed the pick list was arbitrary and unordered (as seen below) which resulted in an inefficient circuitous journey throughout the warehouse and a significant waste of time and resources.
+The API parses a large volume of customer-order JSON data to generate a sorted list (i.e. pick list) of all items and their quantities ordered alphanumerically by Stock Keeping Unit (SKU). This allows items to be picked in order by warehouse location. Before the API was developed the pick list was arbitrary and unordered (as seen below) which resulted in inefficient order-picking and a significant waste of time and resources.
 
 <img width="432" alt="before" src="https://github.com/andy-gaber/premier-pick-list/assets/44306593/8044c186-bf80-4258-9704-3a4094ce2a25">
 

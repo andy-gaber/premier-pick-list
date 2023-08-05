@@ -1,7 +1,6 @@
 import time
 import datetime
 import requests
-from requests.auth import HTTPBasicAuth
 from typing import Any
 
 from app import SQLITE_DATABASE_URI

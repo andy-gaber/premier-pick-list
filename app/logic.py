@@ -8,8 +8,7 @@ from app import SQLITE_DATABASE_URI
 from app.db import create_tables, _connect_db, _close_db
 from app.sku_map import MAP
 from app.secrets import (
-	USER, 
-	PASS, 
+	AUTH,
 	AMZ_USA_REFRESH_ENDPOINT,
 	AMZ_CAN_REFRESH_ENDPOINT,
 	EBAY_REFRESH_ENDPOINT,
@@ -25,8 +24,6 @@ from app.secrets import (
 	NSOTD_ENDPOINT, 
 	BUCK_ENDPOINT
 )
-
-AUTH = HTTPBasicAuth(USER, PASS)
 
 
 # get up to date order data from all stores; this drops all tables 

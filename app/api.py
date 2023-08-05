@@ -1,7 +1,6 @@
 import time
 import datetime
 import requests
-from requests.auth import HTTPBasicAuth
 from typing import Any
 
 from flask import render_template, flash, redirect, url_for, current_app, request, abort

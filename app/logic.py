@@ -24,11 +24,12 @@ from app.secrets import (
 	BUCK_ENDPOINT
 )
 
-
-# get up to date order data from all stores; this drops all tables 
-# if they exist to remove stale data from db
+# Refresh and import orders from all online stores; 
+# creates db tables and throws exception on error
 def _refresh_stores() -> bool:
 	try:
+		# Amazon sales restricted to United States and Canada
+		# and each has its own selling channel
 		amazon_usa = requests.post(AMZ_USA_REFRESH_ENDPOINT, auth=AUTH)
 		amazon_can = requests.post(AMZ_CAN_REFRESH_ENDPOINT, auth=AUTH)
 		ebay = requests.post(EBAY_REFRESH_ENDPOINT, auth=AUTH)
@@ -52,9 +53,10 @@ def _refresh_stores() -> bool:
 		return False
 
 
+# Returns a List of JSON data for Amazon orders
 def _get_amazon_orders() -> tuple[list[dict[str, Any]]]:
-	# Amazon order metadata (Amazon sales restricted to United States and Canada)
-	# Amazon sales data is categorized into "awaiting shipment" and "pending fulfillment" 
+	# Amazon order metadata, Amazon sales data is categorized into
+	# "awaiting shipment" and "pending fulfillment" 
 	amazon_usa_await_resp = requests.get(AMZ_USA_AWAIT_ENDPOINT, auth=AUTH)
 	amazon_usa_pend_resp = requests.get(AMZ_USA_PEND_ENDPOINT, auth=AUTH)
 	amazon_can_await_resp = requests.get(AMZ_CAN_AWAIT_ENDPOINT, auth=AUTH)
@@ -78,6 +80,7 @@ def _get_amazon_orders() -> tuple[list[dict[str, Any]]]:
 	return (amazon_usa_await_orders, amazon_usa_pend_orders, amazon_can_await_orders, amazon_can_pend_orders)
 
 
+# Returns a List of JSON data for eBay orders
 def _get_ebay_orders() -> list[dict[str, Any]]:
 	# eBay order metadata
 	ebay_await_resp = requests.get(EBAY_ENDPOINT, auth=AUTH)
@@ -91,6 +94,7 @@ def _get_ebay_orders() -> list[dict[str, Any]]:
 	return ebay_orders
 
 
+# Returns a List of JSON data for Premier orders
 def _get_prem_orders() -> list[dict[str, Any]]:
 	# Premier Shirts order metadata
 	prem_shirts_await_resp = requests.get(PREM_SHIRTS_ENDPOINT, auth=AUTH)
@@ -104,6 +108,7 @@ def _get_prem_orders() -> list[dict[str, Any]]:
 	return prem_shirts_orders
 
 
+# Returns a List of JSON data for New Shirt of the Day orders
 def _get_nsotd_orders() -> list[dict[str, Any]]:
 	# New Shirt of the Day order metadata
 	nsotd_await_resp = requests.get(NSOTD_ENDPOINT, auth=AUTH)
@@ -117,6 +122,7 @@ def _get_nsotd_orders() -> list[dict[str, Any]]:
 	return nsotd_orders
 
 
+# Returns a List of JSON data for Buckeroo orders
 def _get_buckeroo_orders() -> list[dict[str, Any]]:
 	# Buckeroo order metadata
 	buck_await_resp = requests.get(BUCK_ENDPOINT, auth=AUTH)
@@ -130,14 +136,14 @@ def _get_buckeroo_orders() -> list[dict[str, Any]]:
 	return buck_orders
 
 
+# Parse a store's order metadata and populate its db table
+# 	is_ebay (bool) : eBay's order number is mapped from key 'orderKey',
+# 	while all other stores order numbers are mapped from key 'orderNumber'
 def _parse_store_metadata(
 	orders: list[dict[str, Any]], 
 	store: str, 
 	is_ebay: bool = False
 ) -> None:
-	# bool is_ebay is used because eBay's order number is mapped from key 'orderKey', 
-	# while all other stores order numbers are mapped from key 'orderNumber'
-	
 	conn = _connect_db()
 	
 	# For debugging!
@@ -180,7 +186,7 @@ def _parse_store_metadata(
 		cur.execute(new_customer_order, order_data)
 		conn.commit()
 
-		# A list of dictionaries with item information.
+		# list of dictionaries with item information
 		items_list: list[dict[str, Any]] = order['items']
 
 		for item in items_list:
@@ -231,6 +237,7 @@ def _parse_store_metadata(
 	# return METADATA
 
 
+# Clean and normalize the Stock Keeping Unit to sort properly
 def _clean_sku(sku: str) -> str:
 	# Modify VS127 - VS136 for logical sorting
 	vs_map = {
@@ -364,6 +371,7 @@ def _clean_sku(sku: str) -> str:
 	return brand_and_style + '-' + size
 
 
+# Condense and sort all Stock Keeping Units along with their sizes and quantities
 def _create_pick_list(items: list[tuple[str, int]]):
 	# sort sizes in logical order (tops: XSML to 8XL, bottoms: 30 to 54)
 	size_ordering = {

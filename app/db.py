@@ -2,8 +2,8 @@ import sqlite3
 from app import app, SQLITE_DATABASE_URI
 
 
+# sqlite3.connect creates the db file if it doesn't exist
 def _connect_db():
-	# creates db file if doesn't exist
 	conn = sqlite3.connect(SQLITE_DATABASE_URI)
 	return conn
 
@@ -12,6 +12,8 @@ def _close_db(conn):
 	conn.close()
 
 
+# get a store's order date, order number, customer name, item SKU, 
+# and item quantity; this is the relevant data for quality control
 def _get_metadata(store: str) -> list[tuple[str, str, str, str, int]]:
 	conn = _connect_db()
 	cur = conn.cursor()	
@@ -31,6 +33,7 @@ def _get_metadata(store: str) -> list[tuple[str, str, str, str, int]]:
 	return items
 
 
+# create table for Orders, Items, and Notes
 def create_tables():
 	conn = _connect_db()
 
@@ -38,7 +41,6 @@ def create_tables():
 	cur.execute("DROP TABLE IF EXISTS Customer_Order")
 	cur.execute("DROP TABLE IF EXISTS Item")
 	cur.execute("DROP TABLE IF EXISTS Note")
-
 
 	order_table = """
 		CREATE TABLE Customer_Order (
@@ -73,11 +75,13 @@ def create_tables():
 	cur.execute(item_table)
 	cur.execute(note_table)
 
+	# index store name, because it is used to query for metadata
 	store_idx = """
 		CREATE INDEX store_idx
 		ON Customer_Order (store);
 	"""
 
+	# index customer order date, because it is used to query for metadata
 	iso_dt_idx = """
 		CREATE INDEX iso_dt_idx
 		ON Customer_Order (iso_datetime);

@@ -1,9 +1,7 @@
-import time
 import datetime
-import requests
 from typing import Any
 
-from flask import render_template, flash, redirect, url_for, current_app, request, abort
+from flask import render_template, flash, redirect, url_for, current_app, abort
 from app import app
 from app.forms import NoteForm, EditNoteForm
 from app.db import _connect_db, _close_db, _get_metadata
@@ -20,7 +18,6 @@ from app.logic import (
 	_clean_sku,
 	_create_pick_list
 )
-
 
 AMAZON: str = 'Amazon'
 EBAY: str = 'eBay'
@@ -61,6 +58,7 @@ def update():
 		usa_pend: list[dict[str, Any]]
 		can_await: list[dict[str, Any]]
 		can_pend: list[dict[str, Any]]
+
 		usa_await, usa_pend, can_await, can_pend = _get_amazon_orders()
 		_parse_store_metadata(usa_await, AMAZON)
 		_parse_store_metadata(usa_pend, AMAZON)
@@ -136,9 +134,9 @@ def buckeroo():
 @app.route('/notes', methods=['GET', 'POST'])
 def notes():
 	conn = _connect_db()
-
 	form = NoteForm()
-	# add new note
+
+	# add a new note
 	if form.validate_on_submit():
 		note: str = form.note.data
 		
@@ -168,7 +166,6 @@ def notes():
 
 @app.route('/delete/<id>')
 def delete_note(id):
-
 	conn = _connect_db()
 	cur = conn.cursor()
 	query = """
@@ -183,6 +180,7 @@ def delete_note(id):
 	return redirect(url_for('notes'))
 
 
+# selects the note ID to be edited, redirects to edit_note route function
 @app.route('/edit/<id>')
 def edit(id):
 	with app.app_context():
@@ -196,6 +194,7 @@ def edit_note():
 	note_id: int = current_app.edit_note_id
 	form = EditNoteForm()
 	
+	# edit a note
 	if form.validate_on_submit():
 		note: str = form.note.data
 		conn = _connect_db()

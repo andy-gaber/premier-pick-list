@@ -292,11 +292,11 @@ def _clean_sku(sku: str) -> str:
 		brand_and_style = wick_or_wear + '-' + color
 		size = _size
 
-	# VESE / AMDS
-	elif brand == 'VESE' or brand == 'AMDS':
-		# AMDS-RED-01-XL / VESE-GREEN-11-LRG
-		vese_or_amds, color, style, _size = sku_array
-		brand_and_style = vese_or_amds + '-' + style + '-' + color
+	# VESE / AMDS / CAS COUNTRY
+	elif brand == 'VESE' or brand == 'AMDS' or brand == 'CAS':
+		# AMDS-RED-01-XL / VESE-GREEN-11-LRG / CAS-PURP-01-LRG
+		vese_or_amds_or_cas, color, style, _size = sku_array
+		brand_and_style = vese_or_amds_or_cas + '-' + style + '-' + color
 		size = _size
 
 	# RODEO / ACE / PLAT

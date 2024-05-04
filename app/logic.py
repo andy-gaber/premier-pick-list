@@ -292,15 +292,31 @@ def _clean_sku(sku: str) -> str:
 		brand_and_style = wick_or_wear + '-' + color
 		size = _size
 
-	# VESE / AMDS / CAS COUNTRY
-	elif brand == 'VESE' or brand == 'AMDS' or brand == 'CAS':
-		# AMDS-RED-01-XL / VESE-GREEN-11-LRG / CAS-PURP-01-LRG
-		vese_or_amds_or_cas, color, style, _size = sku_array
-		brand_and_style = vese_or_amds_or_cas + '-' + style + '-' + color
+	# VESE / AMDS
+	elif brand == 'VESE' or brand == 'AMDS':
+		# AMDS-RED-01-XL / VESE-GREEN-11-LRG
+		vese_or_amds, color, style, _size = sku_array
+		brand_and_style = vese_or_amds + '-' + style + '-' + color
 		size = _size
 
-	# RODEO / ACE / PLAT
-	elif brand == 'ROD' or brand == 'RODEO' or brand == 'ACE' or brand == 'PLAT':
+	# CASUAL COUNTRY
+	elif brand == 'CAS' or brand == 'CASS':
+		# long sleeve: CAS-PURP-01-LRG / CAS-NAV-3065-MED
+		if len(sku_array) == 4:
+			cas, color, style, _size = sku_array
+			# CAS-NAV-3065-MED
+			if style == '3065':
+				style = 'SOLID-3065'
+			brand_and_style = cas + '-' + style + '-' + color
+			size = _size
+		# short sleeve: CAS-SS-45-WHT-SML
+		elif len(sku_array) == 5:
+			cas, ss, style, color, _size = sku_array
+			brand_and_style = cas + '-' + ss + '-' + style + '-' + color
+			size = _size
+
+	# RODEO / ACE
+	elif brand == 'ROD' or brand == 'RODEO' or brand == 'ACE':
 		# RODEO-524-XL
 		if len(sku_array) == 3:
 			rodeo, style, _size = sku_array
@@ -314,18 +330,31 @@ def _clean_sku(sku: str) -> str:
 				style = style[5:]
 			brand_and_style = rodeo + '-' + style + '-' + color_or_women
 			size = _size
-		# ACE-WOM-BLU-ES5110-SML
+		# ACE-WOM-BLU-ES5110-SML / ACE-HFK700-10-NVYBLU-3XL
 		elif len(sku_array) == 5:
-			ace, women, color, style, _size = sku_array
-			brand_and_style = ace + '-' + style + '-' + women + '-' + color
-			size = _size
+			# HFK700 / HFK200
+			if sku_array[1] == 'HFK700' or sku_array[1] == 'HFK200':
+				ace, hfk, style, color, _size = sku_array
+				brand_and_style = ace + '-' + hfk + '-' + style + '-' + color
+				size = _size
+			# WOMENS
+			else:
+				ace, women, color, style, _size = sku_array
+				brand_and_style = ace + '-' + style + '-' + women + '-' + color
+				size = _size
 	
 	# BUCKEROO
 	elif brand == 'BUCK':
 		# BUCK-WS6-BEGE/BRWN-LRG
-		buck, style, color, _size = sku_array
-		brand_and_style = buck + '-' + style + '-' + color
-		size = _size
+		if len(sku_array) == 4:
+			buck, style, color, _size = sku_array
+			brand_and_style = buck + '-' + style + '-' + color
+			size = _size
+		# BUCK-WS100-01-BLACK/BLUE-SML / BUCK-WS200-01-BLACK/BLUE-SML
+		elif len(sku_array) == 5:
+			buck, style, number, color, _size = sku_array
+			brand_and_style = buck + '-' + style + '-' + number + '-' + color
+			size = _size
 
 	# VICT / ENVY / SOCI JEANS
 	elif brand == 'VIC' or brand == 'VICT' or brand == 'ENVY' or brand == 'SOCI':

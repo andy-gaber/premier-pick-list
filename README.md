@@ -8,6 +8,6 @@ The business sells apparel through five separete online stores, and each storeâ€
 
 <img width="748" alt="after" src="https://github.com/andy-gaber/premier-pick-list/assets/44306593/0f6c9af8-8b1e-4964-bcd2-2219f2e51bb5">
 
-The API was developed with Python and implements Flask to handle HTTP requests and SQLite as the database engine. Each time a new pick list is generated the database tables are cleared of stale data then repopulated. The API also includes functionality for quality control: each individual store has its own HTTP endpoint that displays the relevant customer-order metadata for that particular store, and users have he ability to post and view notes.
+This was developed with Python and implements Flask to handle HTTP requests and SQLite as the database engine. Also included is functionality for quality control: each individual store has its own HTTP endpoint that displays the relevant customer-order metadata for that particular store, and users have he ability to post and view notes.
 
 This API is used daily and updated when necessary (originally when bugs were discovered, but now only when SKUs are changed or new inventory is added... no bugs in a long time!). It resulted in an optimization of order-processing and a reduction in the time to pick inventory items by approximately 50 percent.
